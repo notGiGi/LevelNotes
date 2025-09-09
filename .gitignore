@@ -1,0 +1,21 @@
+﻿# Node/Vite
+node_modules/
+**/.vite/
+dist/
+npm-debug.log*
+pnpm-debug.log*
+
+# Rust / Cargo / Tauri
+target/
+apps/desktop/src-tauri/target/
+.cargo/
+*.pdb
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Env
+.env

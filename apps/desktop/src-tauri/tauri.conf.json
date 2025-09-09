@@ -1,0 +1,28 @@
+{
+    "$schema": "https://schema.tauri.app/config/2",
+    "identifier": "com.levelnotes.app",
+    "productName": "LevelNotes",
+    "version": "0.0.1",
+    "build": {
+        "beforeDevCommand": "pnpm -C ./frontend dev",
+        "beforeBuildCommand": "pnpm -C ./frontend build",
+        "devUrl": "http://localhost:5173",
+        "frontendDist": "../frontend/dist"
+    },
+    "app": {
+        "security": {
+            "csp": null
+        },
+        "windows": [
+            {
+                "title": "LevelNotes",
+                "width": 1200,
+                "height": 800,
+                "resizable": true
+            }
+        ]
+    },
+    "bundle": {
+        "active": false
+    }
+}

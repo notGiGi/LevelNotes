@@ -1,0 +1,71 @@
+﻿:root { --fg:#111; --muted:#666; --brand:#3a7afe; --border:#e7e7e7; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial; color:var(--fg); background:#fff; }
+.container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+.header { display:flex; align-items:center; justify-content: space-between; margin-bottom: 10px; }
+.toolbar { display:flex; gap:10px; align-items:center; margin: 10px 0 16px; flex-wrap:wrap; }
+.button { background: var(--brand); color:white; border:none; padding:8px 12px; border-radius:10px; cursor:pointer; }
+.button:hover { filter: brightness(0.95); }
+.input { padding: 8px 10px; border:1px solid var(--border); border-radius:10px; min-width: 280px; }
+.link { color: var(--brand); text-decoration: none; } .link:hover { text-decoration: underline; }
+.empty { opacity: 0.7; }
+.grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:12px; }
+.card { display:flex; gap:10px; border:1px solid var(--border); padding:10px; border-radius:12px; cursor:pointer; background:#fff; }
+.card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.thumb { width:72px; height:72px; border-radius:10px; background:#f2f2f2; object-fit:cover; }
+.title { font-weight:600; }
+.meta { display:flex; gap:6px; align-items:center; font-size:12px; color:#555; }
+.tags { display:flex; gap:6px; flex-wrap:wrap; }
+.tag { font-size:12px; background:#f3f6ff; color:#2042a5; padding:3px 8px; border-radius:999px; }
+.modal-backdrop { position: fixed; inset:0; background: rgba(0,0,0,0.25); display:flex; align-items: center; justify-content:center; padding: 20px; }
+.modal { width: min(900px, 95vw); max-height: 90vh; overflow:auto; background:#fff; border-radius:16px; border:1px solid var(--border); padding:16px; }
+.modal .top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.close { background:#eee; color:#111; border:none; padding:8px 12px; border-radius:10px; cursor:pointer; }
+.close:hover { filter: brightness(0.95); }
+.html :where(p,li,blockquote,pre,code) { max-width: 100%; }
+
+/* health pill */
+.pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); }
+.pill.ok { background:#e8fbe8; color:#117a11; border-color:#bde5bd; }
+.pill.bad { background:#fdeaea; color:#a31212; border-color:#f3c2c2; }
+
+/* PDF CLIPPER */
+.pdf-modal { display:flex; flex-direction:column; gap:10px; }
+.pdf-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+.pdf-filename { opacity:0.8; }
+.pdf-view { overflow:auto; max-height: calc(100vh - 280px); padding: 10px; background: #fafafa; border: 1px solid #e7e7e7; border-radius: 12px; }
+.pdf-page { position: relative; margin: 0 auto; }
+.pdf-canvas { display:block; box-shadow: 0 2px 10px rgba(0,0,0,0.06); background:white; }
+.pdf-textlayer { position:absolute; inset:0; pointer-events:auto; }
+.textLayer > span { position:absolute; white-space:pre; transform-origin:0% 0%; }
+/* === PDF text layer (real selection) === */
+.pdf-view { overflow:auto; max-height: calc(100vh - 280px); padding:10px; background:#fafafa; border:1px solid #e7e7e7; border-radius:12px; display:flex; justify-content:center; }
+.pdf-page { position: relative; width: fit-content; margin: 0 auto; }
+.pdf-canvas { display:block; background:white; box-shadow: 0 2px 10px rgba(0,0,0,0.06); z-index:1; }
+.textLayer { position:absolute; inset:0; pointer-events:auto; user-select:text; z-index:2; }
+.textLayer span { position:absolute; white-space:pre; transform-origin:0% 0%; line-height:1; color: transparent; }
+.textLayer ::selection { background: rgba(58,122,254,0.25); }
+
+/* === PDF selectable layer === */
+.pdf-view { overflow:auto; max-height: calc(100vh - 280px); padding:10px; background:#fafafa; border:1px solid #e7e7e7; border-radius:12px; display:flex; justify-content:center; }
+.pdf-page { position: relative; width: fit-content; margin: 0 auto; }
+.pdf-canvas { display:block; background:white; box-shadow: 0 2px 10px rgba(0,0,0,0.06); z-index:1; }
+.textLayer { position:absolute; inset:0; pointer-events:auto; user-select:text; z-index:3; }
+.textLayer span { position:absolute; white-space:pre; transform-origin:0% 0%; line-height:1; }
+.textLayer ::selection { background: rgba(58,122,254,0.25); }
+
+/* === PDF selectable layer (fixed) === */
+.pdf-view { overflow:auto; max-height: calc(100vh - 280px); padding:10px; background:#fafafa; border:1px solid #e7e7e7; border-radius:12px; display:flex; justify-content:center; }
+.pdf-page { position: relative; width: fit-content; margin: 0 auto; }
+.pdf-canvas { display:block; background:white; box-shadow: 0 2px 10px rgba(0,0,0,0.06); z-index:1; }
+.textLayer { position:absolute; inset:0; pointer-events:auto; user-select:text; z-index:3; }
+.textLayer span { position:absolute; white-space:pre; transform-origin:0% 0%; line-height:1; }
+.textLayer ::selection { background: rgba(58,122,254,0.25); }
+
+/* === PDF selectable text layer === */
+.textLayer { position:absolute; inset:0; pointer-events:auto; }
+.textLayer > span { position:absolute; white-space:pre; transform-origin:0% 0%; }
+.textLayer ::selection { background: rgba(180,213,255,0.35); }
+.pdf-view { overflow:auto; max-height: calc(100vh - 240px); padding: 10px; background: #fafafa; border: 1px solid #e7e7e7; border-radius: 12px; }
+.pdf-page { margin: 0 auto; }
+.pdf-canvas { display:block; background:white; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }

@@ -1,0 +1,14 @@
+﻿{
+  "name": "@levelnotes/sdk",
+  "version": "0.0.1",
+  "private": false,
+  "type": "module",
+  "main": "src/client.ts",
+  "types": "src/client.ts",
+  "dependencies": {
+    "@levelnotes/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}

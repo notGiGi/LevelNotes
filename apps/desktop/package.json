@@ -1,0 +1,13 @@
+{
+	"name": "levelnotes-desktop",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "tauri dev",
+		"build": "tauri build",
+		"tauri": "tauri"
+	},
+	"devDependencies": {
+		"@tauri-apps/cli": "^2.8.4"
+	}
+}

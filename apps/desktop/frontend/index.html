@@ -1,0 +1,20 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>LevelNotes</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      window.addEventListener("error", e => {
+        const pre = document.createElement('pre');
+        pre.style.cssText="position:fixed;left:8px;bottom:8px;background:#111;color:#fff;padding:10px;max-width:90vw;max-height:30vh;overflow:auto;z-index:99999;border-radius:8px";
+        pre.textContent = "Runtime error: " + (e.error?.message || e.message);
+        document.body.appendChild(pre);
+      });
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+﻿{
+    "name":  "levelnotes-extension",
+    "private":  true,
+    "type":  "module",
+    "version":  "0.2.0",
+    "scripts":  {
+                    "watch":  "esbuild src/background.ts --outfile=dist/background.js --bundle --sourcemap --watch \u0026 esbuild src/content.ts --outfile=dist/content.js --bundle --sourcemap --watch",
+                    "build":  "esbuild src/background.ts --outfile=dist/background.js --bundle \u0026\u0026 esbuild src/content.ts --outfile=dist/content.js --bundle"
+                },
+    "devDependencies":  {
+                            "esbuild":  "^0.23.1"
+                        }
+}

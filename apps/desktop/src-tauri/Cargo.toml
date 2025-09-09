@@ -1,0 +1,22 @@
+[package]
+name = "levelnotes"
+version = "0.0.1"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0.4", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.4", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+rusqlite = { version = "0.31", features = ["bundled", "chrono"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+axum = "0.7"
+http = "1"
+tower-http = { version = "0.5", features = ["cors"] }
+
+base64 = "0.22"
+

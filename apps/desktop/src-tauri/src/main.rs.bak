@@ -1,0 +1,527 @@
+﻿#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+use std::{
+  fs,
+  net::SocketAddr,
+  path::{Path as FsPath, PathBuf, Component},
+  sync::{Arc, Mutex},
+};
+
+use axum::{
+  extract::{Path as AxPath, Query as AxQuery},
+  http::{HeaderMap, header, StatusCode},
+  routing::{get, post},
+  Json, Router,
+};
+use chrono::Utc;
+use rusqlite::{params, Connection};
+use serde::{Deserialize, Serialize};
+use tokio::net::TcpListener;
+use tower_http::cors::{Any, CorsLayer};
+use uuid::Uuid;
+use base64::{engine::general_purpose, Engine as _};
+
+// --------- Payload / DTOs ----------
+#[derive(Deserialize)]
+struct ClipPayload {
+  source: Option<Source>,
+  selection: Option<Selection>,
+  media: Option<Media>,
+  ops: Option<Ops>,
+}
+#[derive(Deserialize)] struct Source { kind: String, url: Option<String>, doi: Option<String> }
+#[derive(Deserialize)] struct Selection { text: Option<String>, html: Option<String> }
+#[derive(Deserialize)] struct Media { screenshotDataUrl: Option<String> }
+
+#[derive(Deserialize, Serialize, Clone)]
+struct Rect { x: f32, y: f32, w: f32, h: f32 }
+
+#[derive(Deserialize)]
+struct Ops {
+  summarize: Option<bool>,
+  tags: Option<Vec<String>>,
+  page: Option<i32>,
+  highlights: Option<Vec<Rect>>,
+}
+
+#[derive(Serialize)]
+struct ClipResponse { ok: bool, note_id: String }
+#[derive(Serialize)]
+struct OkResponse { ok: bool }
+
+#[derive(Serialize)]
+struct NoteListItem {
+  id: String,
+  title: String,
+  created_at: String,
+  source_url: Option<String>,
+  tags: Vec<String>,
+  snippet: Option<String>,
+  preview_path: Option<String>,
+}
+
+#[derive(Serialize)]
+struct NoteDetail {
+  id: String,
+  created_at: String,
+  title: String,
+  plaintext: Option<String>,
+  html: Option<String>,
+  source_url: Option<String>,
+  text_quote: Option<String>,
+  tags: Vec<String>,
+  preview_path: Option<String>,
+  page_number: Option<i32>,
+  highlights: Vec<Rect>,
+}
+
+#[derive(Deserialize)]
+struct SearchParams { q: Option<String> }
+
+// --------- State / DB ----------
+#[derive(Clone)]
+struct AppState { db: Arc<Mutex<Connection>>, data_dir: PathBuf }
+
+fn init_db_at(path: &FsPath) -> Connection {
+  if let Some(parent) = path.parent() {
+    std::fs::create_dir_all(parent).expect("create db dir");
+  }
+  let db = Connection::open(path).expect("db open");
+  db.execute_batch(r#"
+    PRAGMA journal_mode=WAL;
+
+    CREATE TABLE IF NOT EXISTS notes (
+      id TEXT PRIMARY KEY,
+      created_at TEXT NOT NULL,
+      title TEXT NOT NULL,
+      plaintext TEXT,
+      html TEXT,
+      source_url TEXT,
+      text_quote TEXT,
+      preview_path TEXT,
+      tags_json TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at DESC);
+
+    CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts
+    USING fts5(
+      title, plaintext, html, tags,
+      content='notes', content_rowid='rowid'
+    );
+
+    CREATE TRIGGER IF NOT EXISTS notes_ai AFTER INSERT ON notes BEGIN
+      INSERT INTO notes_fts(rowid, title, plaintext, html, tags)
+      VALUES (
+        new.rowid,
+        new.title,
+        new.plaintext,
+        new.html,
+        (SELECT COALESCE(group_concat(value, ' '), '')
+         FROM json_each(new.tags_json))
+      );
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS notes_ad AFTER DELETE ON notes BEGIN
+      INSERT INTO notes_fts(notes_fts, rowid) VALUES ('delete', old.rowid);
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS notes_au AFTER UPDATE ON notes BEGIN
+      INSERT INTO notes_fts(notes_fts, rowid) VALUES ('delete', old.rowid);
+      INSERT INTO notes_fts(rowid, title, plaintext, html, tags)
+      VALUES (
+        new.rowid,
+        new.title,
+        new.plaintext,
+        new.html,
+        (SELECT COALESCE(group_concat(value, ' '), '')
+         FROM json_each(new.tags_json))
+      );
+    END;
+  "#).expect("migrate");
+  // Additional columns (ignore errors if already exist)
+  let _ = db.execute("ALTER TABLE notes ADD COLUMN page_number INTEGER", []);
+  let _ = db.execute("ALTER TABLE notes ADD COLUMN highlights_json TEXT", []);
+  db
+}
+
+fn resolve_db_path() -> PathBuf {
+  if let Ok(local) = std::env::var("LOCALAPPDATA") {
+    PathBuf::from(local).join("LevelNotes").join("levelnotes.db")
+  } else {
+    PathBuf::from("../.levelnotes/levelnotes.db")
+  }
+}
+
+fn sanitize_filename(s: &str) -> String {
+  let mut out = String::with_capacity(s.len());
+  for ch in s.chars().take(60) {
+    if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' || ch == ' ' {
+      out.push(ch);
+    } else {
+      out.push('-');
+    }
+  }
+  let trimmed = out.trim();
+  if trimmed.is_empty() { "note".to_string() } else { trimmed.to_string() }
+}
+
+fn save_data_url_png(data_url: &str, id: &str, data_dir: &FsPath) -> Option<String> {
+  let comma = data_url.find(',')?;
+  let (_header, b64) = data_url.split_at(comma + 1);
+  let bytes = general_purpose::STANDARD.decode(b64).ok()?;
+  let dir = data_dir.join("previews");
+  let _ = fs::create_dir_all(&dir);
+  let rel = format!("previews/{}.png", id);
+  let abs = data_dir.join(&rel);
+  fs::write(abs, bytes).ok()?;
+  Some(rel)
+}
+
+// --------- Router ----------
+fn build_router(state: AppState) -> Router {
+  let cors = CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any);
+  let data_dir_for_files = state.data_dir.clone();
+
+  Router::new()
+    .route("/health", get(|| async { "ok" }))
+
+    .route("/file/*path", get({
+      let data_dir = data_dir_for_files.clone();
+      move |AxPath(path): AxPath<String>| async move {
+        // sanitize path
+        let rel = PathBuf::from(&path);
+        for c in rel.components() {
+          match c {
+            Component::ParentDir | Component::RootDir | Component::Prefix(_) => {
+              return (StatusCode::BAD_REQUEST, HeaderMap::new(), Vec::<u8>::new());
+            }
+            _ => {}
+          }
+        }
+        let abs = data_dir.join(rel);
+        match fs::read(&abs) {
+          Ok(bytes) => {
+            let mut headers = HeaderMap::new();
+            let ct = if abs.extension().and_then(|e| e.to_str()) == Some("png") {
+              "image/png"
+            } else { "application/octet-stream" };
+            headers.insert(header::CONTENT_TYPE, ct.parse().unwrap());
+            (StatusCode::OK, headers, bytes)
+          }
+          Err(_) => (StatusCode::NOT_FOUND, HeaderMap::new(), Vec::<u8>::new())
+        }
+      }
+    }))
+
+    .route("/clip", post({
+      let state = state.clone();
+      move |Json(payload): Json<ClipPayload>| async move {
+        let id = Uuid::new_v4().to_string();
+        let created_at = Utc::now().to_rfc3339();
+        let title = payload.selection.as_ref()
+          .and_then(|s| s.text.as_ref())
+          .map(|t| t.trim())
+          .filter(|s| !s.is_empty())
+          .map(|t| t.chars().take(80).collect::<String>())
+          .unwrap_or_else(|| "Untitled clip".to_string());
+
+        let plaintext = payload.selection.as_ref().and_then(|s| s.text.clone());
+        let html = payload.selection.as_ref().and_then(|s| s.html.clone());
+        let source_url = payload.source.as_ref().and_then(|s| s.url.clone());
+        let text_quote = plaintext.clone();
+        let tags_vec: Vec<String> = payload.ops.as_ref().and_then(|o| o.tags.clone()).unwrap_or_default();
+        let tags_json = serde_json::to_string(&tags_vec).unwrap();
+        let page_number: Option<i32> = payload.ops.as_ref().and_then(|o| o.page);
+        let highlights_json: String = payload.ops.as_ref()
+          .and_then(|o| o.highlights.clone())
+          .map(|v| serde_json::to_string(&v).unwrap())
+          .unwrap_or_else(|| "[]".to_string());
+
+        // optional preview image
+        let preview_rel: Option<String> = if let Some(m) = &payload.media {
+          if let Some(data_url) = &m.screenshotDataUrl {
+            let data_dir = state.data_dir.clone();
+            save_data_url_png(data_url, &id, &data_dir)
+          } else { None }
+        } else { None };
+
+        {
+          let db = state.db.lock().expect("db lock");
+          db.execute(
+            "INSERT INTO notes (id, created_at, title, plaintext, html, source_url, text_quote, preview_path, tags_json, page_number, highlights_json)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            params![id, created_at, title, plaintext, html, source_url, text_quote, preview_rel, tags_json, page_number, highlights_json]
+          ).expect("insert note");
+        }
+
+        println!("Saved clip: {} (source={:?}, tags={:?}, page={:?})", id, source_url, tags_vec, page_number);
+        Json(ClipResponse { ok: true, note_id: id })
+      }
+    }))
+
+    .route("/notes", get({
+      let state = state.clone();
+      move || async move {
+        let rows: Vec<NoteListItem> = {
+          let db = state.db.lock().expect("db lock");
+          let mut stmt = db.prepare(
+            "SELECT id, title, created_at, source_url, tags_json, plaintext, preview_path
+             FROM notes ORDER BY created_at DESC LIMIT 200"
+          ).expect("prepare");
+          let mut cursor = stmt.query([]).expect("query");
+          let mut out: Vec<NoteListItem> = Vec::new();
+          while let Some(row) = cursor.next().expect("next") {
+            let id: String = row.get(0).unwrap();
+            let title: String = row.get(1).unwrap_or_else(|_| "Untitled clip".to_string());
+            let created_at: String = row.get(2).unwrap();
+            let source_url: Option<String> = row.get::<_, Option<String>>(3).unwrap_or(None);
+            let tags_json: Option<String> = row.get(4).unwrap_or(None);
+            let plaintext: Option<String> = row.get(5).unwrap_or(None);
+            let preview_path: Option<String> = row.get(6).unwrap_or(None);
+            let tags: Vec<String> = tags_json
+              .and_then(|j| serde_json::from_str::<Vec<String>>(&j).ok())
+              .unwrap_or_default();
+            let snippet = plaintext.as_ref().map(|s| {
+              let s = s.trim();
+              let mut out = s.chars().take(160).collect::<String>();
+              if s.len() > out.len() { out.push_str(""); }
+              out
+            });
+            out.push(NoteListItem { id, title, created_at, source_url, tags, snippet, preview_path });
+          }
+          out
+        };
+        Json(rows)
+      }
+    }))
+
+    .route("/search", get({
+      let state = state.clone();
+      move |AxQuery(params): AxQuery<SearchParams>| async move {
+        let q = params.q.unwrap_or_default();
+        let rows: Vec<NoteListItem> = {
+          let db = state.db.lock().expect("db lock");
+          if q.trim().is_empty() {
+            let mut stmt = db.prepare(
+              "SELECT id, title, created_at, source_url, tags_json, plaintext, preview_path
+               FROM notes ORDER BY created_at DESC LIMIT 100"
+            ).expect("prepare");
+            let mut cursor = stmt.query([]).expect("query");
+            let mut out: Vec<NoteListItem> = Vec::new();
+            while let Some(row) = cursor.next().expect("next") {
+              let id: String = row.get(0).unwrap();
+              let title: String = row.get(1).unwrap_or_else(|_| "Untitled clip".to_string());
+              let created_at: String = row.get(2).unwrap();
+              let source_url: Option<String> = row.get::<_, Option<String>>(3).unwrap_or(None);
+              let tags_json: Option<String> = row.get(4).unwrap_or(None);
+              let plaintext: Option<String> = row.get(5).unwrap_or(None);
+              let preview_path: Option<String> = row.get(6).unwrap_or(None);
+              let tags: Vec<String> = tags_json
+                .and_then(|j| serde_json::from_str::<Vec<String>>(&j).ok())
+                .unwrap_or_default();
+              let snippet = plaintext.as_ref().map(|s| {
+                let s = s.trim();
+                let mut out = s.chars().take(160).collect::<String>();
+                if s.len() > out.len() { out.push_str(""); }
+                out
+              });
+              out.push(NoteListItem { id, title, created_at, source_url, tags, snippet, preview_path });
+            }
+            out
+          } else {
+            let mut stmt = db.prepare(
+              "SELECT n.id, n.title, n.created_at, n.source_url, n.tags_json, n.plaintext, n.preview_path
+               FROM notes n JOIN notes_fts f ON f.rowid = n.rowid
+               WHERE notes_fts MATCH ?1
+               ORDER BY n.created_at DESC
+               LIMIT 100"
+            ).expect("prepare");
+            let mut cursor = stmt.query([q]).expect("query");
+            let mut out: Vec<NoteListItem> = Vec::new();
+            while let Some(row) = cursor.next().expect("next") {
+              let id: String = row.get(0).unwrap();
+              let title: String = row.get(1).unwrap_or_else(|_| "Untitled clip".to_string());
+              let created_at: String = row.get(2).unwrap();
+              let source_url: Option<String> = row.get::<_, Option<String>>(3).unwrap_or(None);
+              let tags_json: Option<String> = row.get(4).unwrap_or(None);
+              let plaintext: Option<String> = row.get(5).unwrap_or(None);
+              let preview_path: Option<String> = row.get(6).unwrap_or(None);
+              let tags: Vec<String> = tags_json
+                .and_then(|j| serde_json::from_str::<Vec<String>>(&j).ok())
+                .unwrap_or_default();
+              let snippet = plaintext.as_ref().map(|s| {
+                let s = s.trim();
+                let mut out = s.chars().take(160).collect::<String>();
+                if s.len() > out.len() { out.push_str(""); }
+                out
+              });
+              out.push(NoteListItem { id, title, created_at, source_url, tags, snippet, preview_path });
+            }
+            out
+          }
+        };
+        Json(rows)
+      }
+    }))
+
+    .route("/note/:id", get({
+      let state = state.clone();
+      move |AxPath(id): AxPath<String>| async move {
+        let res: Option<NoteDetail> = {
+          let db = state.db.lock().expect("db lock");
+          let mut stmt = db.prepare(
+            "SELECT id, created_at, title, plaintext, html, source_url, text_quote, preview_path, tags_json, page_number, highlights_json
+             FROM notes WHERE id = ?1"
+          ).expect("prepare");
+          let mut cursor = stmt.query(params![id]).expect("query");
+          if let Some(row) = cursor.next().expect("next") {
+            let id: String = row.get(0).unwrap();
+            let created_at: String = row.get(1).unwrap();
+            let title: String = row.get(2).unwrap_or_else(|_| "Untitled clip".to_string());
+            let plaintext: Option<String> = row.get(3).unwrap_or(None);
+            let html: Option<String> = row.get(4).unwrap_or(None);
+            let source_url: Option<String> = row.get(5).unwrap_or(None);
+            let text_quote: Option<String> = row.get(6).unwrap_or(None);
+            let preview_path: Option<String> = row.get(7).unwrap_or(None);
+            let tags_json: Option<String> = row.get(8).unwrap_or(None);
+            let page_number: Option<i32> = row.get(9).unwrap_or(None);
+            let highlights_json: Option<String> = row.get(10).unwrap_or(None);
+
+            let tags: Vec<String> = tags_json
+              .and_then(|j| serde_json::from_str::<Vec<String>>(&j).ok())
+              .unwrap_or_default();
+            let highlights: Vec<Rect> = highlights_json
+              .and_then(|j| serde_json::from_str::<Vec<Rect>>(&j).ok())
+              .unwrap_or_default();
+
+            Some(NoteDetail {
+              id, created_at, title, plaintext, html, source_url, text_quote, tags, preview_path, page_number, highlights
+            })
+          } else { None }
+        };
+        match res {
+          Some(note) => Json(note),
+          None => Json(NoteDetail {
+            id: "not-found".into(),
+            created_at: "".into(),
+            title: "Not found".into(),
+            plaintext: None, html: None, source_url: None, text_quote: None,
+            tags: vec![], preview_path: None, page_number: None, highlights: vec![]
+          })
+        }
+      }
+    }))
+
+    .route("/delete/:id", post({
+      let state = state.clone();
+      move |AxPath(id): AxPath<String>| async move {
+        let affected = {
+          let db = state.db.lock().expect("db lock");
+          db.execute("DELETE FROM notes WHERE id = ?1", params![id]).expect("delete")
+        };
+        println!("Deleted note {} (affected={})", id, affected);
+        Json(OkResponse { ok: true })
+      }
+    }))
+
+        .route("/update/:id", post({
+      let state = state.clone();
+      move |AxPath(id): AxPath<String>, Json(payload): Json<UpdatePayload>| async move {
+        let tags_json = payload.tags.as_ref().map(|v| serde_json::to_string(v).unwrap());
+        let affected = {
+          let db = state.db.lock().expect("db lock");
+          db.execute(
+            "UPDATE notes
+               SET title = COALESCE(?2, title),
+                   tags_json = COALESCE(?3, tags_json)
+             WHERE id = ?1",
+            params![id, payload.title, tags_json]
+          ).expect("update")
+        };
+        println!("Updated note (title/tags) affected={}", affected);
+        Json(OkResponse { ok: affected > 0 })
+      }
+    }))
+    .route("/export/:id.md", get({
+      let state = state.clone();
+      move |AxPath(id): AxPath<String>| async move {
+        let (title, created_at, plaintext, html, source_url, tags_json): (String, String, Option<String>, Option<String>, Option<String>, Option<String>) = {
+          let db = state.db.lock().expect("db lock");
+          let mut stmt = db.prepare(
+            "SELECT title, created_at, plaintext, html, source_url, tags_json FROM notes WHERE id = ?1"
+          ).expect("prepare");
+          let mut cursor = stmt.query(params![id]).expect("query");
+          if let Some(row) = cursor.next().expect("next") {
+            (
+              row.get::<_, String>(0).unwrap_or_else(|_| "Untitled clip".to_string()),
+              row.get::<_, String>(1).unwrap_or_default(),
+              row.get::<_, Option<String>>(2).unwrap_or(None),
+              row.get::<_, Option<String>>(3).unwrap_or(None),
+              row.get::<_, Option<String>>(4).unwrap_or(None),
+              row.get::<_, Option<String>>(5).unwrap_or(None),
+            )
+          } else {
+            ("Not found".to_string(), "".to_string(), None, None, None, None)
+          }
+        };
+
+        let tags: Vec<String> = tags_json
+          .and_then(|j| serde_json::from_str::<Vec<String>>(&j).ok())
+          .unwrap_or_default();
+
+        let mut md = String::new();
+        md.push_str(&format!("# {}\n\n", title));
+        md.push_str(&format!("- **Created:** {}\n", created_at));
+        if let Some(u) = &source_url { md.push_str(&format!("- **Source:** {}\n", u)); }
+        if !tags.is_empty() {
+          md.push_str("- **Tags:** ");
+          md.push_str(&tags.iter().map(|t| format!("#{}", t)).collect::<Vec<_>>().join(" "));
+          md.push('\n');
+        }
+        md.push('\n');
+
+        if let Some(pt) = &plaintext {
+          md.push_str("## Clip (plaintext)\n\n");
+          md.push_str(pt);
+          md.push_str("\n\n");
+        }
+        if let Some(h) = &html {
+          md.push_str("## Clip (HTML)\n\n`html\n");
+          md.push_str(h);
+          md.push_str("\n`\n");
+        }
+
+        let mut headers = HeaderMap::new();
+        headers.insert(header::CONTENT_TYPE, "text/markdown; charset=utf-8".parse().unwrap());
+        let safe = sanitize_filename(&title);
+        headers.insert(header::CONTENT_DISPOSITION, format!("attachment; filename=\"{}-{}.md\"", safe, id).parse().unwrap());
+
+        (headers, md)
+      }
+    }))
+    .layer(cors)
+}
+
+// --------- main ----------
+fn main() {
+  let db_path = resolve_db_path();
+  println!("LevelNotes DB  {}", db_path.display());
+  let data_dir = db_path.parent().map(|p| p.to_path_buf()).unwrap_or_else(|| PathBuf::from("."));
+  let state = AppState { db: Arc::new(Mutex::new(init_db_at(&db_path))), data_dir };
+  let router = build_router(state);
+  let addr: SocketAddr = "127.0.0.1:3030".parse().unwrap();
+
+  tauri::Builder::default()
+    .setup(move |_| {
+      tauri::async_runtime::spawn(async move {
+        println!("LevelNotes HTTP listening on http://{}", addr);
+        let listener = TcpListener::bind(addr).await.expect("bind tcp");
+        axum::serve(listener, router).await.expect("serve axum");
+      });
+      Ok(())
+    })
+    .run(tauri::generate_context!())
+    .expect("error running tauri app");
+}
+

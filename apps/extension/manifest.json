@@ -1,0 +1,23 @@
+﻿{
+  "manifest_version": 3,
+  "name": "LevelNotes Clipper",
+  "version": "0.2.0",
+  "description": "Clip selected text/HTML from the web to LevelNotes desktop.",
+  "permissions": ["contextMenus", "activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "Send selection to LevelNotes" },
+  "commands": {
+    "send-selection": {
+      "suggested_key": { "default": "Alt+L" },
+      "description": "Send selection to LevelNotes"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

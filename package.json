@@ -1,0 +1,11 @@
+{
+"name": "levelnotes",
+"private": true,
+"scripts": {
+"dev": "pnpm -C apps/desktop dev",
+"build": "pnpm -C apps/desktop build",
+"ext:dev": "pnpm -C apps/extension dev"
+},
+"devDependencies": {},
+"packageManager": "pnpm@9.0.0"
+}
