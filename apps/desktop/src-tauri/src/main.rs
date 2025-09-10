@@ -383,3 +383,4 @@ fn main() {
     .run(tauri::generate_context!())
     .expect("error running tauri app");
 }
+

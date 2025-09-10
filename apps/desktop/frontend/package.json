@@ -8,6 +8,7 @@
     "preview": "vite preview --port 5173"
   },
   "dependencies": {
+    "canvas": "2.11.2",
     "pdfjs-dist": "^5.4.149",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
