@@ -1,5 +1,6 @@
 ﻿import React, { useEffect, useRef, useState, useCallback } from "react";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import { TextLayerBuilder } from "pdfjs-dist/web/pdf_viewer";
 
 // Configurar worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
@@ -49,103 +50,43 @@ export default function PdfClipper({ onClose, onClipped, targetNoteId = null, ta
 
   const renderPage = useCallback(async () => {
     if (!pdfDoc || !canvasRef.current || !textLayerRef.current) return;
-    
+
     setLoading(true);
-    
+
     try {
       const pg = await pdfDoc.getPage(page);
       const viewport = pg.getViewport({ scale });
 
-      // Setup canvas
+      // Setup canvas with device pixel ratio for crisp rendering
       const canvas = canvasRef.current;
       const context = canvas.getContext("2d")!;
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+      const outputScale = window.devicePixelRatio || 1;
+      canvas.width = Math.ceil(viewport.width * outputScale);
+      canvas.height = Math.ceil(viewport.height * outputScale);
+      canvas.style.width = `${viewport.width}px`;
+      canvas.style.height = `${viewport.height}px`;
+      context.setTransform(outputScale, 0, 0, outputScale, 0, 0);
 
       // Render PDF page
-      const renderContext = {
-        canvasContext: context,
-        viewport: viewport,
-      };
-      
-      await pg.render(renderContext).promise;
+      await pg.render({ canvasContext: context, viewport }).promise;
 
-      // Clear and setup text layer
-      const textLayerDiv = textLayerRef.current;
-      textLayerDiv.innerHTML = "";
-      textLayerDiv.style.width = `${viewport.width}px`;
-      textLayerDiv.style.height = `${viewport.height}px`;
+      // Use PDF.js TextLayerBuilder for selectable text layer
+      const host = textLayerRef.current;
+      host.innerHTML = "";
+      host.style.width = `${viewport.width}px`;
+      host.style.height = `${viewport.height}px`;
+      host.style.left = "0";
+      host.style.top = "0";
 
-      // Get text content
-      const textContent = await pg.getTextContent();
-      
-      // Create text layer fragments
-      const textLayerFrag = document.createDocumentFragment();
-      
-      textContent.items.forEach((item: any) => {
-        const span = document.createElement("span");
-        span.textContent = item.str;
-        span.style.position = "absolute";
-        
-        // Transform text position
-        const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
-        const fontSize = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
-        const fontAscent = fontSize;
-        
-        if (item.str === " " || !item.str) {
-          span.dataset.isWhitespace = "true";
-        }
-        
-        // Calculate position
-        let angle = Math.atan2(tx[1], tx[0]);
-        const fontHeight = Math.hypot(tx[2], tx[3]);
-        const fontWidth = Math.hypot(tx[0], tx[1]);
-        
-        let left, top;
-        if (angle === 0) {
-          left = tx[4];
-          top = tx[5] - fontAscent;
-        } else {
-          angle += Math.PI / 2;
-          left = tx[4] + fontAscent * Math.sin(angle);
-          top = tx[5] - fontAscent * Math.cos(angle);
-        }
-        
-        span.style.left = `${left}px`;
-        span.style.top = `${top}px`;
-        span.style.fontSize = `${fontSize}px`;
-        span.style.fontFamily = item.fontName || "sans-serif";
-        
-        // Handle text direction
-        if (item.dir !== "ltr") {
-          span.style.direction = item.dir;
-        }
-        
-        // Set transform for rotated text
-        if (angle !== 0) {
-          span.style.transform = `rotate(${angle}rad)`;
-          span.style.transformOrigin = "0% 0%";
-        }
-        
-        // Set width to enable proper text selection
-        if (item.width) {
-          span.style.width = `${item.width}px`;
-        }
-        
-        textLayerFrag.appendChild(span);
-        
-        // Add line breaks where needed
-        if (item.hasEOL) {
-          const br = document.createElement("br");
-          textLayerFrag.appendChild(br);
-        }
-      });
-      
-      textLayerDiv.appendChild(textLayerFrag);
-      
-      // Normalize text layer to fix selection issues
-      textLayerDiv.normalize();
-      
+      const builder = new TextLayerBuilder({ pdfPage: pg });
+      await builder.render({ viewport });
+      builder.div.style.width = `${viewport.width}px`;
+      builder.div.style.height = `${viewport.height}px`;
+      builder.div.style.left = "0";
+      builder.div.style.top = "0";
+      host.replaceWith(builder.div);
+      // @ts-ignore keep ref current
+      textLayerRef.current = builder.div;
     } catch (err) {
       console.error("Error rendering page:", err);
     } finally {

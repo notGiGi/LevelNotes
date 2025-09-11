@@ -8,10 +8,22 @@
     "preview": "vite preview --port 5173"
   },
   "dependencies": {
+    "@excalidraw/excalidraw": "^0.18.0",
+    "@tiptap/extension-color": "^3.4.2",
+    "@tiptap/extension-highlight": "^3.4.2",
+    "@tiptap/extension-image": "^3.4.2",
+    "@tiptap/extension-text-style": "^3.4.2",
+    "@tiptap/react": "^3.4.2",
+    "@tiptap/starter-kit": "^3.4.2",
     "canvas": "2.11.2",
+    "emoji-picker-react": "^4.13.3",
+    "framer-motion": "^12.23.12",
     "pdfjs-dist": "^5.4.149",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-colorful": "^5.6.1",
+    "react-dom": "^19.1.1",
+    "react-hotkeys-hook": "^5.1.0",
+    "react-pdf": "^10.1.0"
   },
   "devDependencies": {
     "@types/react": "^19.1.12",
