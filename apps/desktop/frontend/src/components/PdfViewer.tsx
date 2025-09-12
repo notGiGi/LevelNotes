@@ -20,7 +20,6 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const textLayerRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Load PDF
   useEffect(() => {
@@ -37,9 +36,9 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
     });
   }, [url]);
 
-  // Render page with CORRECT alignment
+  // Render page - SIMPLE AND WORKING
   const renderPage = useCallback(async () => {
-    if (!pdf || !canvasRef.current || !textLayerRef.current || !containerRef.current) return;
+    if (!pdf || !canvasRef.current || !textLayerRef.current) return;
 
     try {
       const page = await pdf.getPage(pageNum);
@@ -50,29 +49,27 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
       const context = canvas.getContext("2d");
       
       if (!context) return;
-      
-      // IMPORTANT: Set canvas size
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-      
-      // CRITICAL: Set container size to match canvas exactly
-      const container = containerRef.current;
-      container.style.width = viewport.width + "px";
-      container.style.height = viewport.height + "px";
 
-      // Render PDF
+      // Set canvas size - NO devicePixelRatio complications
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      canvas.style.width = viewport.width + "px";
+      canvas.style.height = viewport.height + "px";
+
+      // Render PDF page
       await page.render({
         canvasContext: context,
-        viewport: viewport,
+        viewport: viewport
       }).promise;
 
-      // Setup text layer - MUST match canvas exactly
+      // Setup text layer - EXACT same dimensions
       const textLayerDiv = textLayerRef.current;
       textLayerDiv.innerHTML = "";
       
-      // CRITICAL: Same dimensions as canvas, NO offset
+      // CRITICAL: Match canvas dimensions EXACTLY
       textLayerDiv.style.width = viewport.width + "px";
       textLayerDiv.style.height = viewport.height + "px";
+      textLayerDiv.style.position = "absolute";
       textLayerDiv.style.left = "0";
       textLayerDiv.style.top = "0";
 
@@ -86,27 +83,27 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
         const span = document.createElement("span");
         span.textContent = item.str;
 
-        // EXACT transform - no modifications
+        // Use transform directly from PDF
         const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
-        const fontSize = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
+        const fontSize = Math.hypot(tx[2], tx[3]);
         
-        // EXACT positioning from transform
-        span.style.cssText = `
-          position: absolute;
-          left: ${tx[4]}px;
-          top: ${tx[5] - fontSize}px;
-          font-size: ${fontSize}px;
-          font-family: ${item.fontName || "sans-serif"};
-          color: transparent;
-          cursor: text;
-          user-select: text;
-          -webkit-user-select: text;
-          white-space: pre;
-          transform-origin: 0% 0%;
-          line-height: 1;
-        `;
+        // Position text span EXACTLY where PDF says
+        span.style.position = "absolute";
+        span.style.left = tx[4] + "px";
+        span.style.top = (tx[5] - fontSize) + "px";
+        span.style.fontSize = fontSize + "px";
+        span.style.fontFamily = item.fontName || "sans-serif";
         
-        // Only apply rotation if significant
+        // Text selection styles
+        span.style.color = "transparent";
+        span.style.cursor = "text";
+        span.style.userSelect = "text";
+        span.style.webkitUserSelect = "text";
+        span.style.MozUserSelect = "text";
+        span.style.whiteSpace = "pre";
+        span.style.transformOrigin = "0% 0%";
+        
+        // Only apply rotation if needed
         const angle = Math.atan2(tx[1], tx[0]);
         if (Math.abs(angle) > 0.01) {
           span.style.transform = `rotate(${angle}rad)`;
@@ -121,7 +118,7 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
         }
       });
 
-      // Normalize text nodes
+      // Normalize text nodes for better selection
       textLayerDiv.normalize();
       
     } catch (err) {
@@ -147,58 +144,61 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
   }, [onTextSelect]);
 
   const showFloatingButton = (selection: Selection) => {
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    
-    // Remove existing
-    const existingFloater = document.getElementById("pdf-floater");
-    if (existingFloater) existingFloater.remove();
-    
-    // Create floater
-    const floater = document.createElement("div");
-    floater.id = "pdf-floater";
-    floater.className = "pdf-floating-panel";
-    floater.style.cssText = `
-      position: fixed;
-      left: ${rect.left + rect.width / 2}px;
-      top: ${rect.top - 60}px;
-      transform: translateX(-50%);
-      z-index: 10000;
-    `;
-    
-    floater.innerHTML = `
-      <div class="pdf-float-actions">
-        <button class="pdf-action-main">
-          ➕ Add to Note
-        </button>
-        <div class="pdf-float-divider"></div>
-        <div class="pdf-highlight-group">
-          <button class="pdf-highlight-option" data-color="#fef08a" style="background: #fef08a"></button>
-          <button class="pdf-highlight-option" data-color="#86efac" style="background: #86efac"></button>
-          <button class="pdf-highlight-option" data-color="#a5b4fc" style="background: #a5b4fc"></button>
-          <button class="pdf-highlight-option" data-color="#fca5a5" style="background: #fca5a5"></button>
+    try {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      // Remove existing floater
+      const existingFloater = document.getElementById("pdf-floater");
+      if (existingFloater) existingFloater.remove();
+      
+      // Create floater
+      const floater = document.createElement("div");
+      floater.id = "pdf-floater";
+      floater.className = "pdf-floating-panel";
+      floater.style.cssText = `
+        position: fixed;
+        left: ${rect.left + rect.width / 2}px;
+        top: ${rect.top - 60}px;
+        transform: translateX(-50%);
+        z-index: 10000;
+      `;
+      
+      floater.innerHTML = `
+        <div class="pdf-float-actions">
+          <button class="pdf-action-main">
+            ➕ Add to Note
+          </button>
+          <div class="pdf-float-divider"></div>
+          <div class="pdf-highlight-group">
+            <button class="pdf-highlight-option" data-color="#fef08a" style="background: #fef08a"></button>
+            <button class="pdf-highlight-option" data-color="#86efac" style="background: #86efac"></button>
+            <button class="pdf-highlight-option" data-color="#a5b4fc" style="background: #a5b4fc"></button>
+            <button class="pdf-highlight-option" data-color="#fca5a5" style="background: #fca5a5"></button>
+          </div>
         </div>
-      </div>
-    `;
-    
-    document.body.appendChild(floater);
-    
-    // Add to note
-    floater.querySelector(".pdf-action-main")?.addEventListener("click", () => {
-      onInsert(selectedText);
-      window.getSelection()?.removeAllRanges();
-      floater.remove();
-    });
-    
-    // Color buttons
-    floater.querySelectorAll(".pdf-highlight-option").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const color = btn.getAttribute("data-color")!;
-        highlightSelection(selection, color);
-        onInsert(selectedText, color);
+      `;
+      
+      document.body.appendChild(floater);
+      
+      // Add event listeners
+      floater.querySelector(".pdf-action-main")?.addEventListener("click", () => {
+        onInsert(selectedText);
+        window.getSelection()?.removeAllRanges();
         floater.remove();
       });
-    });
+      
+      floater.querySelectorAll(".pdf-highlight-option").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const color = btn.getAttribute("data-color")!;
+          highlightSelection(selection, color);
+          onInsert(selectedText, color);
+          floater.remove();
+        });
+      });
+    } catch (e) {
+      console.error("Error showing floating button:", e);
+    }
   };
 
   const highlightSelection = (selection: Selection, color: string) => {
@@ -220,16 +220,17 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
     selection.removeAllRanges();
   };
 
-  // Hide floater
+  // Hide floating button on click elsewhere
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (!(e.target as Element).closest("#pdf-floater")) {
+      const target = e.target as Element;
+      if (!target.closest("#pdf-floater") && !target.closest(".textLayer")) {
         document.getElementById("pdf-floater")?.remove();
       }
     };
     
-    document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
   return (
@@ -241,7 +242,7 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
             onClick={() => setPageNum(Math.max(1, pageNum - 1))}
             disabled={pageNum <= 1}
           >
-            ◀
+            ◀ Prev
           </button>
           
           <div className="pdf-page-display">
@@ -253,7 +254,7 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
             onClick={() => setPageNum(Math.min(numPages, pageNum + 1))}
             disabled={pageNum >= numPages}
           >
-            ▶
+            Next ▶
           </button>
         </div>
         
@@ -265,7 +266,7 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
             onClick={() => setScale(Math.max(0.5, scale - 0.1))}
             disabled={scale <= 0.5}
           >
-            −
+            − Zoom Out
           </button>
           
           <div className="pdf-zoom-display">
@@ -277,14 +278,14 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
             onClick={() => setScale(Math.min(3, scale + 0.1))}
             disabled={scale >= 3}
           >
-            +
+            + Zoom In
           </button>
           
           <button 
             className="pdf-control-btn"
             onClick={() => setScale(1.3)}
           >
-            ↻
+            ↻ Reset
           </button>
         </div>
       </div>
@@ -296,7 +297,7 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
             <p>Loading PDF...</p>
           </div>
         ) : (
-          <div className="pdf-page" ref={containerRef}>
+          <div className="pdf-page-container">
             <canvas ref={canvasRef} className="pdf-canvas" />
             <div ref={textLayerRef} className="textLayer" />
           </div>
