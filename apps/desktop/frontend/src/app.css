@@ -1,4 +1,4 @@
-/* Reset and Base */
+﻿/* Reset and Base */
 * {
   margin: 0;
   padding: 0;
@@ -737,206 +737,7 @@ body {
   color: #888;
 }
 
-/* PDF Container */
-.pdf-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
 
-.pdf-controls {
-  padding: 12px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.pdf-controls.modern {
-  padding: 12px 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(10px);
-}
-
-.pdf-nav-group,
-.pdf-zoom-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 10px;
-}
-
-.pdf-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
-  color: var(--text);
-  cursor: pointer;
-  transition: all 0.15s;
-  font-size: 18px;
-  font-weight: 500;
-}
-
-.pdf-btn:hover:not(:disabled) {
-  background: var(--accent);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(94, 92, 230, 0.2);
-}
-
-.pdf-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.pdf-viewport {
-  flex: 1;
-  overflow: auto;
-  padding: 24px;
-  display: flex;
-  justify-content: center;
-}
-
-.pdf-page {
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  position: relative;
-}
-
-.pdf-divider {
-  width: 1px;
-  height: 24px;
-  background: var(--border);
-}
-
-.pdf-page-indicator {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 8px;
-  font-weight: 500;
-}
-
-.pdf-page-input {
-  width: 48px;
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  text-align: center;
-  font-weight: 500;
-}
-
-.pdf-zoom-indicator {
-  padding: 4px 12px;
-  background: white;
-  border-radius: 6px;
-  font-weight: 500;
-  min-width: 60px;
-  text-align: center;
-}
-
-/* PDF Floating Button */
-.pdf-floating-button {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  backdrop-filter: blur(10px);
-  animation: floaterAppear 0.2s;
-}
-
-@keyframes floaterAppear {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(10px) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-  }
-}
-
-.pdf-action-btn {
-  padding: 8px 16px;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.15s;
-}
-
-.pdf-action-btn:hover {
-  background: var(--accent-hover);
-  transform: scale(1.05);
-}
-
-.pdf-highlight-options {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-}
-
-.pdf-highlight-btn {
-  width: 28px;
-  height: 28px;
-  border: 2px solid white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.pdf-highlight-btn:hover {
-  transform: scale(1.15);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Loading */
-.pdf-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-secondary);
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
-}
-
-.spinner.modern {
-  animation: modernSpin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 @keyframes modernSpin {
@@ -1051,111 +852,6 @@ body {
     border-radius: 0;
   }
 }
-/* PDF Floating Button - Fixed Styles */
-.pdf-floating-button {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 
-    0 20px 25px -5px rgba(0, 0, 0, 0.15),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(10px);
-  animation: floaterAppear 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes floaterAppear {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(10px) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-  }
-}
-
-.pdf-action-btn-main {
-  padding: 10px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-  box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25);
-}
-
-.pdf-action-btn-main:hover {
-  background: linear-gradient(135deg, #5a67d8 0%, #6b4aa0 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgba(102, 126, 234, 0.35);
-}
-
-.pdf-action-btn-main:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.25);
-}
-
-.pdf-highlight-options {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  padding: 4px;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 8px;
-}
-
-.pdf-highlight-btn {
-  width: 32px;
-  height: 32px;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.1),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.05);
-  position: relative;
-  overflow: hidden;
-}
-
-.pdf-highlight-btn::before {
-  content: "?";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  color: rgba(0, 0, 0, 0.4);
-  font-weight: bold;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.pdf-highlight-btn:hover {
-  transform: scale(1.15);
-  box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.15),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-  border-color: rgba(255, 255, 255, 1);
-}
-
-.pdf-highlight-btn:hover::before {
-  transform: translate(-50%, -50%) scale(1);
-}
-
-.pdf-highlight-btn:active {
-  transform: scale(1.05);
-}
-
 /* Better selection visibility */
 .textLayer ::selection {
   background: rgba(102, 126, 234, 0.3);
@@ -1174,71 +870,6 @@ body {
   padding: 1px 0;
 }
 
-/* PDF Controls Improvements */
-.pdf-nav-group,
-.pdf-zoom-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 10px;
-}
-
-.pdf-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
-  color: var(--text);
-  cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.pdf-btn:hover:not(:disabled) {
-  background: var(--accent);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(94, 92, 230, 0.2);
-}
-
-.pdf-btn:active {
-  transform: translateY(0);
-}
-
-.pdf-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.pdf-page-indicator {
-  font-size: 14px;
-  font-weight: 500;
-  padding: 0 8px;
-  color: var(--text);
-}
-
-.pdf-zoom-indicator {
-  padding: 4px 12px;
-  background: white;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 14px;
-  min-width: 60px;
-  text-align: center;
-  color: var(--text);
-}
-
-.pdf-canvas {
-  display: block;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-}
 /* Perfect Paper Alignment System */
 :root {
   --line-height: 28px;
@@ -1609,39 +1240,6 @@ body {
   background: var(--border);
 }
 
-/* PDF Quote Styles */
-.pdf-quote {
-  position: relative;
-  margin: 20px 0;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-left: 4px solid var(--accent);
-  border-radius: 0 8px 8px 0;
-  font-style: italic;
-  animation: slideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.pdf-quote::before {
-  content: """;
-  position: absolute;
-  top: -10px;
-  left: 10px;
-  font-size: 48px;
-  color: var(--accent);
-  opacity: 0.2;
-}
-
 /* Workspace Divider Handle */
 .divider-handle {
   position: absolute;
@@ -1690,21 +1288,6 @@ body {
   animation: spin 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
 }
 
-/* PDF Page Container */
-.pdf-page-container {
-  background: white;
-  box-shadow: 
-    0 10px 40px rgba(0, 0, 0, 0.08),
-    0 2px 10px rgba(0, 0, 0, 0.04);
-  border-radius: 4px;
-  position: relative;
-}
-
-.pdf-canvas {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
 /* Nearly invisible but selectable */
   line-height: 1;
   user-select: text;
@@ -1794,33 +1377,6 @@ body {
 */
 
 
-/* PDF Text Layer - Fixed Alignment and Better Selection Color */
-.pdf-page-container {
-  position: relative;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  display: inline-block;
-  margin: 0 auto;
-}
-
-.pdf-canvas {
-  display: block;
-  position: relative;
-  z-index: 0;
-  pointer-events: none; /* text layer handles selection */
-}
-
-/* Text layer absolutely covers the page container */
-.pdf-page-container > .textLayer {
-  position: absolute;
-  inset: 0;
-  z-index: 2 !important;
-  user-select: text;
-  -webkit-user-select: text;
-  pointer-events: auto;
-}
-
 /* Strong override to ensure selection works across browsers */
 
 
@@ -1878,5 +1434,1380 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
+}
+
+/* Smooth text rendering */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+}
+
+/* Character-level selection for smoothness */
+.textLayer-smooth span span {
+  display: inline-block;
+  position: absolute;
+}
+
+/* Beautiful selection color */
+.textLayer-smooth ::selection {
+  background: rgba(99, 102, 241, 0.35) !important;
+  border-radius: 2px;
+}
+
+.textLayer-smooth ::-moz-selection {
+  background: rgba(99, 102, 241, 0.35) !important;
+  border-radius: 2px;
+}
+
+/* Smooth cursor transitions */
+.pdf-viewport {
+  cursor: default;
+  transition: cursor 0.1s ease;
+}
+
+.pdf-viewport:active {
+  cursor: text;
+}
+
+/* Remove text layer flickering */
+.pdf-page-container {
+  position: relative;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  display: inline-block;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Highlighted text in PDF */
+.textLayer-smooth mark {
+  border-radius: 2px;
+  padding: 1px 2px;
+  pointer-events: none;
+}
+
+/* Debug mode - uncomment to see character boxes */
+/*
+.textLayer-smooth {
+  opacity: 0.3 !important;
+  background: rgba(255, 0, 0, 0.05);
+}
+
+.textLayer-smooth span span {
+  border: 1px solid rgba(0, 0, 255, 0.3) !important;
+  background: rgba(0, 255, 0, 0.1) !important;
+}
+*/
+
+
+/* Invisible text layer */
+  line-height: 1;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  cursor: text;
+  z-index: 2;
+}
+
+.textLayer span {
+  color: transparent !important;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  pointer-events: auto;
+}
+
+/* Visible selection with good contrast */
+.textLayer ::selection {
+  background: rgba(33, 150, 243, 0.35) !important;
+}
+
+.textLayer ::-moz-selection {
+  background: rgba(33, 150, 243, 0.35) !important;
+}
+
+/* Alternative for webkit */
+.pdf-viewport ::selection {
+  background: rgba(33, 150, 243, 0.35) !important;
+}
+
+.pdf-viewport ::-moz-selection {
+  background: rgba(33, 150, 243, 0.35) !important;
+}
+
+.textLayer br {
+  user-select: none;
+}
+
+/* Debug mode - uncomment ONLY if selection is not working */
+/*
+.textLayer {
+  opacity: 0.3 !important;
+  background: rgba(255, 0, 0, 0.05);
+}
+
+.textLayer span {
+  border: 1px solid blue !important;
+  background: rgba(0, 255, 0, 0.05) !important;
+}
+*/
+/* Text Layer - Invisible but selectable */
+.textLayer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  opacity: 0; /* Completely invisible */
+  line-height: 1;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  cursor: text;
+  z-index: 2;
+  mix-blend-mode: multiply; /* Important for selection visibility */
+}
+
+.textLayer span {
+  color: transparent !important;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+}
+
+/* VISIBLE SELECTION - This is the key fix */
+.textLayer ::selection {
+  background-color: rgba(66, 133, 244, 0.3) !important;
+  color: transparent !important;
+  mix-blend-mode: normal !important;
+}
+
+.textLayer ::-moz-selection {
+  background-color: rgba(66, 133, 244, 0.3) !important;
+  color: transparent !important;
+  mix-blend-mode: normal !important;
+}
+
+/* Alternative selection style for better visibility */
+.pdf-viewport ::selection {
+  background-color: rgba(66, 133, 244, 0.35) !important;
+}
+
+.pdf-viewport ::-moz-selection {
+  background-color: rgba(66, 133, 244, 0.35) !important;
+}
+
+/* Highlighted text after selection */
+.textLayer mark {
+  position: relative;
+  background-color: inherit;
+  border-radius: 2px;
+  padding: 2px 4px;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.textLayer br {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}
+
+/* Ensure proper viewport */
+.pdf-viewport {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--bg-tertiary);
+  position: relative;
+}
+
+/* Debug mode - Uncomment to see text layer */
+/*
+.textLayer {
+  opacity: 0.2 !important;
+  background: rgba(255, 0, 0, 0.1);
+}
+
+.textLayer span {
+  border: 1px solid red !important;
+  background: rgba(0, 255, 0, 0.1) !important;
+  color: blue !important;
+}
+*/
+
+/* Fix for black canvas issue */
+.pdf-canvas {
+  background: white;
+  image-rendering: crisp-edges;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Smooth transitions */
+.pdf-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-tertiary);
+}
+
+/* Loading state improvement */
+.pdf-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  gap: 16px;
+}
+
+.pdf-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+}
+
+/* Ensure text is actually selectable */
+.pdf-viewer-container * {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+}
+
+/* Debug mode - uncomment to see text layer */
+/*
+.textLayer {
+  opacity: 0.25 !important;
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.textLayer span {
+  color: red !important;
+  border: 1px solid green !important;
+}
+*/
+
+
+
+
+/* Invisible text layer */
+  line-height: 1;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  cursor: text;
+  z-index: 2;
+}
+
+.textLayer span {
+  color: transparent !important;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  pointer-events: auto;
+}
+
+/* Visible selection with good contrast */
+.textLayer ::selection {
+  background: rgba(33, 150, 243, 0.35) !important;
+}
+
+.textLayer ::-moz-selection {
+  background: rgba(33, 150, 243, 0.35) !important;
+}
+
+/* Alternative for webkit */
+.pdf-viewport ::selection {
+  background: rgba(33, 150, 243, 0.35) !important;
+}
+
+.pdf-viewport ::-moz-selection {
+  background: rgba(33, 150, 243, 0.35) !important;
+}
+
+.textLayer br {
+  user-select: none;
+}
+
+/* Debug mode - uncomment ONLY if selection is not working */
+/*
+.textLayer {
+  opacity: 0.3 !important;
+  background: rgba(255, 0, 0, 0.05);
+}
+
+.textLayer span {
+  border: 1px solid blue !important;
+  background: rgba(0, 255, 0, 0.05) !important;
+}
+*/
+/* Visible for debugging, change to 0 for production */
+  line-height: 1;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  cursor: text;
+  z-index: 2;
+}
+
+.textLayer span {
+  color: transparent !important;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  pointer-events: auto;
+}
+
+/* Visible selection */
+.textLayer ::selection {
+  background: rgba(66, 133, 244, 0.4) !important;
+  mix-blend-mode: multiply;
+}
+
+.textLayer ::-moz-selection {
+  background: rgba(66, 133, 244, 0.4) !important;
+  mix-blend-mode: multiply;
+}
+
+.textLayer br {
+  user-select: none;
+}
+
+.textLayer mark {
+  position: relative;
+  border-radius: 2px;
+  padding: 2px 4px;
+}
+
+/* Debug mode - uncomment to see text positions */
+/*
+.textLayer {
+  opacity: 0.3 !important;
+  background: rgba(255, 0, 0, 0.05);
+}
+
+.textLayer span {
+  border: 1px solid blue !important;
+  background: rgba(0, 255, 0, 0.1) !important;
+  color: red !important;
+}
+*/
+
+
+
+
+
+/* Invisible text layer */
+  line-height: 1;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  cursor: text;
+  z-index: 2;
+}
+
+.textLayer span {
+  color: transparent !important;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  pointer-events: auto;
+}
+
+/* Visible selection with good contrast */
+.textLayer ::selection {
+  background: rgba(33, 150, 243, 0.35) !important;
+}
+
+.textLayer ::-moz-selection {
+  background: rgba(33, 150, 243, 0.35) !important;
+}
+
+/* Alternative for webkit */
+.pdf-viewport ::selection {
+  background: rgba(33, 150, 243, 0.35) !important;
+}
+
+.pdf-viewport ::-moz-selection {
+  background: rgba(33, 150, 243, 0.35) !important;
+}
+
+.textLayer br {
+  user-select: none;
+}
+
+/* Debug mode - uncomment ONLY if selection is not working */
+/*
+.textLayer {
+  opacity: 0.3 !important;
+  background: rgba(255, 0, 0, 0.05);
+}
+
+.textLayer span {
+  border: 1px solid blue !important;
+  background: rgba(0, 255, 0, 0.05) !important;
+}
+*/
+/* Visible for debugging, change to 0 for production */
+  line-height: 1;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  cursor: text;
+  z-index: 2;
+}
+
+.textLayer span {
+  color: transparent !important;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  pointer-events: auto;
+}
+
+/* Visible selection */
+.textLayer ::selection {
+  background: rgba(66, 133, 244, 0.4) !important;
+  mix-blend-mode: multiply;
+}
+
+.textLayer ::-moz-selection {
+  background: rgba(66, 133, 244, 0.4) !important;
+  mix-blend-mode: multiply;
+}
+
+.textLayer br {
+  user-select: none;
+}
+
+.textLayer mark {
+  position: relative;
+  border-radius: 2px;
+  padding: 2px 4px;
+}
+
+/* Debug mode - uncomment to see text positions */
+/*
+.textLayer {
+  opacity: 0.3 !important;
+  background: rgba(255, 0, 0, 0.05);
+}
+
+.textLayer span {
+  border: 1px solid blue !important;
+  background: rgba(0, 255, 0, 0.1) !important;
+  color: red !important;
+}
+*/
+
+
+
+
+/* Official textLayer styles from pdf.js */
+.textLayer {
+  position: absolute;
+  text-align: initial;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  opacity: 0.25; /* Slightly visible for debugging */
+  line-height: 1;
+  -webkit-text-size-adjust: none;
+  -moz-text-size-adjust: none;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+}
+
+.textLayer br {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.textLayer span,
+.textLayer br {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  -webkit-transform-origin: 0% 0%;
+  transform-origin: 0% 0%;
+}
+
+/* Enhanced text selection */
+.textLayer .highlight {
+  margin: -1px;
+  padding: 1px;
+  background-color: rgba(180, 0, 170, 0.2);
+  border-radius: 4px;
+}
+
+.textLayer .highlight.appended {
+  position: initial;
+}
+
+.textLayer .highlight.begin {
+  border-radius: 4px 0 0 4px;
+}
+
+.textLayer .highlight.end {
+  border-radius: 0 4px 4px 0;
+}
+
+.textLayer .highlight.middle {
+  border-radius: 0;
+}
+
+.textLayer .highlight.selected {
+  background-color: rgba(0, 100, 0, 0.2);
+}
+
+/* Selection styling - IMPORTANT */
+.textLayer ::selection {
+  background: rgba(0, 124, 255, 0.3);
+  mix-blend-mode: multiply;
+}
+
+.textLayer ::-moz-selection {
+  background: rgba(0, 124, 255, 0.3);
+  mix-blend-mode: multiply;
+}
+
+/* Ensures the text layer doesn't have any weird offsets */
+.textLayer .endOfContent {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.textLayer .endOfContent.active {
+  top: 0;
+}
+
+/* Fix for text positioning */
+.textLayer {
+  font-family: sans-serif;
+  font-size: 1rem;
+}
+
+.textLayer > span {
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Production mode - make text invisible */
+.textLayer.production {
+  opacity: 0.01;
+}
+
+/* Debug mode - uncomment to see text alignment */
+/*
+.textLayer {
+  opacity: 0.3 !important;
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.textLayer span {
+  background: rgba(255, 0, 0, 0.1) !important;
+  color: blue !important;
+  border: 1px solid green !important;
+}
+*/
+
+
+
+
+}
+
+
+
+/* PDF Viewer - Perfect Text Selection */
+.pdf-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+.pdf-viewport {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.pdf-page-wrapper {
+  display: inline-block;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pdf-page {
+  position: relative;
+  overflow: hidden;
+}
+
+.pdf-canvas {
+  display: block;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}
+
+/* Text Layer - The KEY to perfect selection */
+.textLayer {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  overflow: hidden !important;
+  opacity: 0.2; /* Visible for debugging */
+  line-height: 1 !important;
+  z-index: 2;
+  text-align: initial;
+  -webkit-text-size-adjust: none;
+  -moz-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+.textLayer > span,
+.textLayerItem {
+  color: transparent !important;
+  position: absolute !important;
+  white-space: pre !important;
+  cursor: text !important;
+  transform-origin: 0% 0% !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  pointer-events: auto !important;
+}
+
+/* Selection highlight */
+.textLayer ::selection {
+  background: rgba(0, 124, 255, 0.3) !important;
+}
+
+.textLayer ::-moz-selection {
+  background: rgba(0, 124, 255, 0.3) !important;
+}
+
+/* Alternative selection for compatibility */
+.textLayerItem::selection {
+  background: rgba(0, 124, 255, 0.3) !important;
+}
+
+.textLayerItem::-moz-selection {
+  background: rgba(0, 124, 255, 0.3) !important;
+}
+
+.textLayer br {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+}
+
+/* Highlighted text after selection */
+.textLayer span[style*="background-color"] {
+  border-radius: 2px;
+  padding: 2px 0;
+}
+
+/* PDF Toolbar Styles */
+.pdf-toolbar-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.pdf-control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdf-control-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pdf-control-btn:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #999;
+  transform: translateY(-1px);
+}
+
+.pdf-control-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pdf-page-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.pdf-zoom-display {
+  min-width: 50px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pdf-toolbar-separator {
+  width: 1px;
+  height: 24px;
+  background: #e0e0e0;
+}
+
+/* Floating action panel */
+.pdf-floating-panel {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  padding: 6px;
+  z-index: 10000;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.pdf-float-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pdf-action-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.pdf-action-main:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.pdf-float-divider {
+  width: 1px;
+  height: 24px;
+  background: #e0e0e0;
+}
+
+.pdf-highlight-group {
+  display: flex;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.pdf-highlight-option {
+  width: 32px;
+  height: 32px;
+  border: 2px solid white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.pdf-highlight-option:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Loading state */
+.pdf-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px;
+}
+
+.pdf-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* DEBUG MODE - Uncomment to see text layer alignment */
+/*
+.textLayer {
+  opacity: 0.3 !important;
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.textLayer > span,
+.textLayerItem {
+  background: rgba(255, 0, 0, 0.1) !important;
+  color: blue !important;
+  border: 1px solid green !important;
+}
+*/
+
+/* PRODUCTION MODE - Use this when alignment is correct */
+/*
+.textLayer {
+  opacity: 0 !important;
+}
+*/
+
+/* PDF Viewer - Stable Version */
+.pdf-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+.pdf-viewport {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.pdf-page-container {
+  position: relative;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.pdf-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Text Layer */
+.textLayer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  opacity: 0; /* Invisible but selectable */
+  line-height: 1;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  cursor: text;
+  z-index: 2;
+}
+
+.textLayer span {
+  color: transparent !important;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+}
+
+/* Selection highlight */
+.textLayer ::selection {
+  background: rgba(0, 124, 255, 0.3);
+}
+
+.textLayer ::-moz-selection {
+  background: rgba(0, 124, 255, 0.3);
+}
+
+.textLayer br {
+  user-select: none;
+}
+
+/* Debug mode - uncomment to see text alignment */
+/*
+.textLayer {
+  opacity: 0.2 !important;
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.textLayer span {
+  background: rgba(255, 0, 0, 0.1) !important;
+  border: 1px solid green !important;
+}
+*/
+
+
+
+
+
+
+/* Visible para debug */
+  line-height: 1;
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+  z-index: 2;
+}
+
+.textLayer span {
+  color: transparent !important;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.textLayer ::selection {
+  background: rgba(0, 124, 255, 0.3);
+}
+
+.textLayer ::-moz-selection {
+  background: rgba(0, 124, 255, 0.3);
+}
+
+/* Debug - descomenta si necesitas ver la alineación */
+/*
+.textLayer {
+  opacity: 0.3 !important;
+  background: rgba(255, 0, 0, 0.05);
+}
+
+.textLayer span {
+  border: 1px solid blue !important;
+  background: rgba(0, 255, 0, 0.1) !important;
+}
+*/
+
+
+
+
+
+.pdf-viewport {
+  /* No bloquear selección */
+  user-select: auto !important;
+}
+
+
+
+
+
+
+
+
+}
+
+/* Debug mode - descomenta para ver la capa de texto */
+/*
+.textLayer {
+  opacity: 0.2 !important;
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.textLayer span {
+  background: rgba(255, 0, 0, 0.1) !important;
+  border: 1px solid green !important;
+}
+*/
+
+
+
+
+}
+
+/* Debug mode - uncomment to see text layer alignment */
+/*
+.textLayer {
+  opacity: 0.3 !important;
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.textLayer span {
+  background: rgba(255, 0, 0, 0.1) !important;
+  border: 1px solid green !important;
+}
+*/
+
+/* Production mode - when alignment is correct */
+/*
+.textLayer {
+  opacity: 0 !important;
+}
+*/
+
+
+
+/* PDF Container - NO PADDING */
+.pdf-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+.pdf-viewport {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* PDF Page - CRITICAL: NO PADDING OR MARGIN */
+.pdf-page {
+  position: relative;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  display: inline-block;
+  /* NO padding, NO margin, NO border */
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  line-height: 0;
+  font-size: 0;
+}
+
+/* Canvas - NO spacing */
+.pdf-canvas {
+  display: block;
+  /* NO margin or padding */
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  vertical-align: top;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Text Layer - EXACT overlay */
+.textLayer {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+  /* NO margin or padding */
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  opacity: 0.2; /* Visible for debugging */
+  line-height: 1 !important;
+  z-index: 2;
+  pointer-events: auto;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  cursor: text;
+}
+
+.textLayer span {
+  color: transparent !important;
+  position: absolute !important;
+  white-space: pre !important;
+  cursor: text !important;
+  transform-origin: 0% 0% !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  /* NO margin or padding */
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.textLayer br {
+  user-select: none !important;
+}
+
+/* Selection color */
+.textLayer ::selection {
+  background: rgba(102, 126, 234, 0.3) !important;
+}
+
+.textLayer ::-moz-selection {
+  background: rgba(102, 126, 234, 0.3) !important;
+}
+
+/* Debug mode - SEE THE ALIGNMENT */
+.textLayer.debug {
+  opacity: 0.3 !important;
+  background: rgba(255, 255, 0, 0.1) !important;
+}
+
+.textLayer.debug span {
+  background: rgba(255, 0, 0, 0.1) !important;
+  border: 1px solid green !important;
+  color: blue !important;
+}
+
+/* Production mode */
+.textLayer.production {
+  opacity: 0 !important;
+}
+
+/* Toolbar */
+.pdf-toolbar-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.pdf-control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdf-control-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 16px;
+}
+
+.pdf-control-btn:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #999;
+}
+
+.pdf-control-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pdf-page-display {
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0 12px;
+}
+
+.pdf-zoom-display {
+  min-width: 60px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 8px;
+  background: #f8f8f8;
+  border-radius: 6px;
+}
+
+.pdf-toolbar-separator {
+  width: 1px;
+  height: 24px;
+  background: #e0e0e0;
+}
+
+/* Floating panel */
+.pdf-floating-panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  padding: 6px;
+  animation: fadeInUp 0.2s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.pdf-float-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pdf-action-main {
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.pdf-action-main:hover {
+  transform: scale(1.05);
+}
+
+.pdf-float-divider {
+  width: 1px;
+  height: 24px;
+  background: #e0e0e0;
+}
+
+.pdf-highlight-group {
+  display: flex;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.pdf-highlight-option {
+  width: 32px;
+  height: 32px;
+  border: 2px solid white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.pdf-highlight-option:hover {
+  transform: scale(1.15);
+}
+
+/* Loading */
+.pdf-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px;
+}
+
+.pdf-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
