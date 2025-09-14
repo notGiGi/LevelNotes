@@ -9,7 +9,9 @@ export type Note = {
   id: string;
   title: string;
   created_at: string;
-  content: any;
+  content: string;
+  html?: string;
+  plaintext?: string;
   tags: string[];
   preview_path?: string | null;
 };
@@ -26,11 +28,26 @@ export default function App() {
 
   const fetchNotes = async () => {
     try {
-      const res = await fetch(`${API}/search?q=`);
+      const res = await fetch(`${API}/notes`);
       const data = await res.json();
-      setNotes(data);
-      if (data.length > 0 && !activeNoteId) {
-        setActiveNoteId(data[0].id);
+      
+      // Cargar detalles completos de cada nota incluyendo HTML
+      const notesWithContent = await Promise.all(
+        data.map(async (note: any) => {
+          const detailRes = await fetch(`${API}/note/${note.id}`);
+          const detail = await detailRes.json();
+          return {
+            ...note,
+            content: detail.html || "",
+            html: detail.html,
+            plaintext: detail.plaintext
+          };
+        })
+      );
+      
+      setNotes(notesWithContent);
+      if (notesWithContent.length > 0 && !activeNoteId) {
+        setActiveNoteId(notesWithContent[0].id);
       }
     } catch (e) {
       console.error("Failed to fetch notes:", e);

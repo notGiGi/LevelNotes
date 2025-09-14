@@ -1,9 +1,9 @@
 ﻿import React, { useEffect, useRef, useState, useCallback } from "react";
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import * as pdfjsLib from "pdfjs-dist";
 import { TextLayerBuilder } from "pdfjs-dist/web/pdf_viewer";
 
 // Configurar worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
 
 const API = "http://127.0.0.1:3030";
 
@@ -296,3 +296,4 @@ export default function PdfClipper({ onClose, onClipped, targetNoteId = null, ta
     </div>
   );
 }
+

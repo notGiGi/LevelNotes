@@ -17,13 +17,30 @@ struct ClipPayload { source: Option<Source>, selection: Option<Selection>, media
 #[derive(Deserialize)] struct Media { screenshotDataUrl: Option<String> }
 #[derive(Deserialize, Serialize, Clone)] struct Rect { x: f32, y: f32, w: f32, h: f32 }
 #[derive(Deserialize)] struct Ops { summarize: Option<bool>, tags: Option<Vec<String>>, page: Option<i32>, highlights: Option<Vec<Rect>> }
-#[derive(Deserialize)] struct UpdatePayload { title: Option<String>, tags: Option<Vec<String>> }
+
+// ACTUALIZADO: Ahora incluye html y plaintext
+#[derive(Deserialize)] 
+struct UpdatePayload { 
+  title: Option<String>, 
+  tags: Option<Vec<String>>,
+  html: Option<String>,
+  plaintext: Option<String>
+}
 
 #[derive(Serialize)] struct ClipResponse { ok: bool, note_id: String }
 #[derive(Serialize)] struct OkResponse { ok: bool }
 
 #[derive(Serialize)]
-struct NoteListItem { id: String, title: String, created_at: String, source_url: Option<String>, tags: Vec<String>, snippet: Option<String>, preview_path: Option<String> }
+struct NoteListItem { 
+  id: String, 
+  title: String, 
+  created_at: String, 
+  source_url: Option<String>, 
+  tags: Vec<String>, 
+  snippet: Option<String>, 
+  preview_path: Option<String>,
+  html: Option<String>
+}
 
 #[derive(Serialize)]
 struct NoteDetail {
@@ -137,7 +154,6 @@ fn build_router(state: AppState) -> Router {
       }
     }))
 
-    // create new
     .route("/clip", post({
       let state = state.clone();
       move |AxJson(payload): AxJson<ClipPayload>| async move {
@@ -169,43 +185,11 @@ fn build_router(state: AppState) -> Router {
             params![id,created_at,title,plaintext,html,source_url,text_quote,preview_rel,tags_json,page_number,highlights_json]
           ).expect("insert");
         }
-        println!("Saved clip: {} (source={:?}, tags={:?}, page={:?})", id, source_url, tags_vec, page_number);
         Json(ClipResponse{ok:true,note_id:id})
       }
     }))
 
-    // append to existing
-    .route("/append/:id", post({
-      let state = state.clone();
-      move |AxPath(id): AxPath<String>, AxJson(payload): AxJson<ClipPayload>| async move {
-        let (old_pt, old_html, old_tags_json, old_preview): (Option<String>, Option<String>, Option<String>, Option<String>) = {
-          let db = state.db.lock().expect("db");
-          let mut stmt = db.prepare("SELECT plaintext, html, tags_json, preview_path FROM notes WHERE id=?1").expect("prep");
-          let mut cur = stmt.query(params![id]).expect("q");
-          if let Some(row)=cur.next().expect("next") { (row.get(0).ok(),row.get(1).ok(),row.get(2).ok(),row.get(3).ok()) } else {
-            return (StatusCode::NOT_FOUND, Json(OkResponse{ok:false}));
-          }
-        };
-        let add_text = payload.selection.as_ref().and_then(|s| s.text.clone()).unwrap_or_default();
-        let add_html = payload.selection.as_ref().and_then(|s| s.html.clone()).unwrap_or_default();
-        let new_pt = if let Some(prev)=old_pt { if !add_text.is_empty() && !prev.is_empty() { format!("{}\n\n{}", prev, add_text) } else if prev.is_empty(){ add_text } else { prev } } else { add_text };
-        let new_html = if let Some(prev)=old_html { if !add_html.is_empty() && !prev.is_empty() { format!("{}\n\n{}", prev, add_html) } else if prev.is_empty(){ add_html } else { prev } } else { add_html };
-        let add_tags: Vec<String> = payload.ops.as_ref().and_then(|o| o.tags.clone()).unwrap_or_default();
-        let tags_json = merge_tags(old_tags_json, &add_tags);
-        let preview_rel: Option<String> = if old_preview.is_none() {
-          if let Some(m)=&payload.media { if let Some(data_url)=&m.screenshotDataUrl { let data_dir=state.data_dir.clone(); save_data_url_png(data_url, &id, &data_dir) } else { None } } else { None }
-        } else { old_preview };
-
-        { let db = state.db.lock().expect("db");
-          db.execute("UPDATE notes SET plaintext=?1, html=?2, tags_json=?3, preview_path=COALESCE(preview_path, ?4) WHERE id=?5",
-            params![new_pt, new_html, tags_json, preview_rel, id]).expect("update");
-        }
-        println!("Appended clip into note {}", id);
-        (StatusCode::OK, Json(OkResponse{ok:true}))
-      }
-    }))
-
-    // update (title/tags)
+    // ACTUALIZADO: Ahora guarda html y plaintext
     .route("/update/:id", post({
       let state = state.clone();
       move |AxPath(id): AxPath<String>, AxJson(payload): AxJson<UpdatePayload>| async move {
@@ -218,8 +202,10 @@ fn build_router(state: AppState) -> Router {
         let merged = match payload.tags { Some(v)=> merge_tags(old_tags_json, &v), None=> old_tags_json.unwrap_or_else(|| "[]".to_string()) };
         {
           let db = state.db.lock().expect("db");
-          db.execute("UPDATE notes SET title=COALESCE(?1,title), tags_json=?2 WHERE id=?3",
-            params![payload.title, merged, id]).expect("upd");
+          db.execute(
+            "UPDATE notes SET title=COALESCE(?1,title), tags_json=?2, html=COALESCE(?3,html), plaintext=COALESCE(?4,plaintext) WHERE id=?5",
+            params![payload.title, merged, payload.html, payload.plaintext, id]
+          ).expect("upd");
         }
         Json(OkResponse{ok:true})
       }
@@ -231,7 +217,7 @@ fn build_router(state: AppState) -> Router {
         let rows: Vec<NoteListItem> = {
           let db = state.db.lock().expect("db");
           let mut stmt = db.prepare(
-            "SELECT id, title, created_at, source_url, tags_json, plaintext, preview_path
+            "SELECT id, title, created_at, source_url, tags_json, plaintext, preview_path, html
              FROM notes ORDER BY created_at DESC LIMIT 200").expect("prep");
           let mut cur=stmt.query([]).expect("q");
           let mut out=Vec::new();
@@ -243,9 +229,10 @@ fn build_router(state: AppState) -> Router {
             let tags_json: Option<String> = row.get(4).unwrap_or(None);
             let plaintext: Option<String> = row.get(5).unwrap_or(None);
             let preview_path: Option<String> = row.get(6).unwrap_or(None);
+            let html: Option<String> = row.get(7).unwrap_or(None);
             let tags: Vec<String> = tags_json.and_then(|j| serde_json::from_str::<Vec<String>>(&j).ok()).unwrap_or_default();
             let snippet = plaintext.as_ref().map(|s| { let s=s.trim(); let mut out=s.chars().take(160).collect::<String>(); if s.len()>out.len(){out.push_str("…");} out });
-            out.push(NoteListItem{ id, title, created_at, source_url, tags, snippet, preview_path });
+            out.push(NoteListItem{ id, title, created_at, source_url, tags, snippet, preview_path, html });
           }
           out
         };
@@ -257,38 +244,39 @@ fn build_router(state: AppState) -> Router {
       let state = state.clone();
       move |AxQuery(params): AxQuery<SearchParams>| async move {
         let q = params.q.unwrap_or_default();
-        let rows: Vec<NoteListItem> = {
+        let rows: Vec<NoteListItem> = if q.is_empty() {
           let db = state.db.lock().expect("db");
-          if q.trim().is_empty() {
-            let mut stmt = db.prepare("SELECT id,title,created_at,source_url,tags_json,plaintext,preview_path FROM notes ORDER BY created_at DESC LIMIT 100").expect("p");
-            let mut cur=stmt.query([]).expect("q");
-            let mut out=Vec::new();
-            while let Some(row)=cur.next().expect("n") {
-              let id:String=row.get(0).unwrap(); let title:String=row.get(1).unwrap_or_else(|_|"Untitled clip".into());
-              let created_at:String=row.get(2).unwrap(); let source_url:Option<String>=row.get(3).unwrap_or(None);
-              let tags_json:Option<String>=row.get(4).unwrap_or(None); let plaintext:Option<String>=row.get(5).unwrap_or(None);
-              let preview_path:Option<String>=row.get(6).unwrap_or(None);
-              let tags:Vec<String>=tags_json.and_then(|j|serde_json::from_str::<Vec<String>>(&j).ok()).unwrap_or_default();
-              let snippet=plaintext.as_ref().map(|s|{let s=s.trim(); let mut out=s.chars().take(160).collect::<String>(); if s.len()>out.len(){out.push_str("…");} out});
-              out.push(NoteListItem{ id,title,created_at,source_url,tags,snippet,preview_path});
-            } out
-          } else {
-            let mut stmt = db.prepare(
-              "SELECT n.id,n.title,n.created_at,n.source_url,n.tags_json,n.plaintext,n.preview_path
-               FROM notes n JOIN notes_fts f ON f.rowid=n.rowid
-               WHERE notes_fts MATCH ?1 ORDER BY n.created_at DESC LIMIT 100").expect("p");
-            let mut cur=stmt.query([q]).expect("q");
-            let mut out=Vec::new();
-            while let Some(row)=cur.next().expect("n") {
-              let id:String=row.get(0).unwrap(); let title:String=row.get(1).unwrap_or_else(|_|"Untitled clip".into());
-              let created_at:String=row.get(2).unwrap(); let source_url:Option<String>=row.get(3).unwrap_or(None);
-              let tags_json:Option<String>=row.get(4).unwrap_or(None); let plaintext:Option<String>=row.get(5).unwrap_or(None);
-              let preview_path:Option<String>=row.get(6).unwrap_or(None);
-              let tags:Vec<String>=tags_json.and_then(|j|serde_json::from_str::<Vec<String>>(&j).ok()).unwrap_or_default();
-              let snippet=plaintext.as_ref().map(|s|{let s=s.trim(); let mut out=s.chars().take(160).collect::<String>(); if s.len()>out.len(){out.push_str("…");} out});
-              out.push(NoteListItem{ id,title,created_at,source_url,tags,snippet,preview_path});
-            } out
-          }
+          let mut stmt = db.prepare(
+            "SELECT id, title, created_at, source_url, tags_json, plaintext, preview_path, html
+             FROM notes ORDER BY created_at DESC LIMIT 100").expect("p");
+          let mut cur=stmt.query([]).expect("q");
+          let mut out=Vec::new();
+          while let Some(row)=cur.next().expect("n") {
+            let id:String=row.get(0).unwrap(); let title:String=row.get(1).unwrap_or_else(|_|"Untitled clip".into());
+            let created_at:String=row.get(2).unwrap(); let source_url:Option<String>=row.get(3).unwrap_or(None);
+            let tags_json:Option<String>=row.get(4).unwrap_or(None); let plaintext:Option<String>=row.get(5).unwrap_or(None);
+            let preview_path:Option<String>=row.get(6).unwrap_or(None); let html:Option<String>=row.get(7).unwrap_or(None);
+            let tags:Vec<String>=tags_json.and_then(|j|serde_json::from_str::<Vec<String>>(&j).ok()).unwrap_or_default();
+            let snippet=plaintext.as_ref().map(|s|{let s=s.trim(); let mut out=s.chars().take(160).collect::<String>(); if s.len()>out.len(){out.push_str("…");} out});
+            out.push(NoteListItem{ id,title,created_at,source_url,tags,snippet,preview_path,html});
+          } out
+        } else { 
+          let db = state.db.lock().expect("db");
+          let mut stmt = db.prepare(
+            "SELECT n.id, n.title, n.created_at, n.source_url, n.tags_json, n.plaintext, n.preview_path, n.html
+             FROM notes n JOIN notes_fts f ON f.rowid=n.rowid
+             WHERE notes_fts MATCH ?1 ORDER BY n.created_at DESC LIMIT 100").expect("p");
+          let mut cur=stmt.query([q]).expect("q");
+          let mut out=Vec::new();
+          while let Some(row)=cur.next().expect("n") {
+            let id:String=row.get(0).unwrap(); let title:String=row.get(1).unwrap_or_else(|_|"Untitled clip".into());
+            let created_at:String=row.get(2).unwrap(); let source_url:Option<String>=row.get(3).unwrap_or(None);
+            let tags_json:Option<String>=row.get(4).unwrap_or(None); let plaintext:Option<String>=row.get(5).unwrap_or(None);
+            let preview_path:Option<String>=row.get(6).unwrap_or(None); let html:Option<String>=row.get(7).unwrap_or(None);
+            let tags:Vec<String>=tags_json.and_then(|j|serde_json::from_str::<Vec<String>>(&j).ok()).unwrap_or_default();
+            let snippet=plaintext.as_ref().map(|s|{let s=s.trim(); let mut out=s.chars().take(160).collect::<String>(); if s.len()>out.len(){out.push_str("…");} out});
+            out.push(NoteListItem{ id,title,created_at,source_url,tags,snippet,preview_path,html});
+          } out
         };
         Json(rows)
       }
@@ -326,8 +314,36 @@ fn build_router(state: AppState) -> Router {
       let state = state.clone();
       move |AxPath(id): AxPath<String>| async move {
         let affected = { let db=state.db.lock().expect("db"); db.execute("DELETE FROM notes WHERE id=?1", params![id]).expect("del") };
-        println!("Deleted note {} (affected={})", id, affected);
         Json(OkResponse{ok:true})
+      }
+    }))
+
+    .route("/append/:id", post({
+      let state = state.clone();
+      move |AxPath(id): AxPath<String>, AxJson(payload): AxJson<ClipPayload>| async move {
+        let (old_pt, old_html, old_tags_json, old_preview): (Option<String>, Option<String>, Option<String>, Option<String>) = {
+          let db = state.db.lock().expect("db");
+          let mut stmt = db.prepare("SELECT plaintext, html, tags_json, preview_path FROM notes WHERE id=?1").expect("prep");
+          let mut cur = stmt.query(params![id]).expect("q");
+          if let Some(row)=cur.next().expect("next") { (row.get(0).ok(),row.get(1).ok(),row.get(2).ok(),row.get(3).ok()) } else {
+            return (StatusCode::NOT_FOUND, Json(OkResponse{ok:false}));
+          }
+        };
+        let add_text = payload.selection.as_ref().and_then(|s| s.text.clone()).unwrap_or_default();
+        let add_html = payload.selection.as_ref().and_then(|s| s.html.clone()).unwrap_or_default();
+        let new_pt = if let Some(prev)=old_pt { if !add_text.is_empty() && !prev.is_empty() { format!("{}\n\n{}", prev, add_text) } else if prev.is_empty(){ add_text } else { prev } } else { add_text };
+        let new_html = if let Some(prev)=old_html { if !add_html.is_empty() && !prev.is_empty() { format!("{}\n\n{}", prev, add_html) } else if prev.is_empty(){ add_html } else { prev } } else { add_html };
+        let add_tags: Vec<String> = payload.ops.as_ref().and_then(|o| o.tags.clone()).unwrap_or_default();
+        let tags_json = merge_tags(old_tags_json, &add_tags);
+        let preview_rel: Option<String> = if old_preview.is_none() {
+          if let Some(m)=&payload.media { if let Some(data_url)=&m.screenshotDataUrl { let data_dir=state.data_dir.clone(); save_data_url_png(data_url, &id, &data_dir) } else { None } } else { None }
+        } else { old_preview };
+
+        { let db = state.db.lock().expect("db");
+          db.execute("UPDATE notes SET plaintext=?1, html=?2, tags_json=?3, preview_path=COALESCE(preview_path, ?4) WHERE id=?5",
+            params![new_pt, new_html, tags_json, preview_rel, id]).expect("update");
+        }
+        (StatusCode::OK, Json(OkResponse{ok:true}))
       }
     }))
 
@@ -383,4 +399,3 @@ fn main() {
     .run(tauri::generate_context!())
     .expect("error running tauri app");
 }
-

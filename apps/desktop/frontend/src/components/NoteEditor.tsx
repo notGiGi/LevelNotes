@@ -10,33 +10,12 @@ import { Note } from "../App";
 
 const API = "http://127.0.0.1:3030";
 
-// Paper patterns
 const PAPER_STYLES = {
-  blank: { 
-    name: "Blank", 
-    icon: "📄",
-    className: "paper-blank" 
-  },
-  lined: { 
-    name: "Lined", 
-    icon: "📝",
-    className: "paper-lined" 
-  },
-  grid: { 
-    name: "Grid", 
-    icon: "📊",
-    className: "paper-grid" 
-  },
-  dotted: { 
-    name: "Dotted", 
-    icon: "⚫",
-    className: "paper-dotted" 
-  },
-  cornell: { 
-    name: "Cornell", 
-    icon: "🎓",
-    className: "paper-cornell" 
-  }
+  blank: { name: "Blank", icon: "📄", className: "paper-blank" },
+  lined: { name: "Lined", icon: "📝", className: "paper-lined" },
+  grid: { name: "Grid", icon: "📊", className: "paper-grid" },
+  dotted: { name: "Dotted", icon: "⚫", className: "paper-dotted" },
+  cornell: { name: "Cornell", icon: "🎓", className: "paper-cornell" }
 };
 
 type Props = {
@@ -47,6 +26,7 @@ type Props = {
 export default function NoteEditor({ note, onUpdate }: Props) {
   const [paperStyle, setPaperStyle] = useState("lined");
   const [wordCount, setWordCount] = useState(0);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -80,9 +60,24 @@ export default function NoteEditor({ note, onUpdate }: Props) {
     onUpdate: ({ editor }) => {
       const text = editor.getText();
       setWordCount(text.split(/\s+/).filter(word => word.length > 0).length);
-      saveNote(editor.getHTML());
+      
+      // Debounce save
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      
+      saveTimeoutRef.current = setTimeout(() => {
+        saveNote(editor.getHTML(), editor.getText());
+      }, 1000);
     }
   });
+
+  // Actualizar contenido cuando cambia la nota
+  useEffect(() => {
+    if (editor && note.id) {
+      editor.commands.setContent(note.content || "");
+    }
+  }, [note.id, editor]);
 
   useEffect(() => {
     const handleInsert = (e: CustomEvent) => {
@@ -110,26 +105,39 @@ export default function NoteEditor({ note, onUpdate }: Props) {
     };
   }, [editor]);
 
-  const saveNote = async (content: string) => {
+  const saveNote = async (htmlContent: string, plainContent: string) => {
     try {
-      await fetch(`${API}/update/${note.id}`, {
+      const response = await fetch(`${API}/update/${note.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: note.title,
-          tags: note.tags
+          tags: note.tags,
+          html: htmlContent,
+          plaintext: plainContent
         })
       });
+      
+      if (!response.ok) {
+        console.error("Failed to save note:", response.status);
+      }
     } catch (e) {
       console.error("Failed to save:", e);
     }
   };
 
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
   if (!editor) return null;
 
   return (
     <div className="notebook-container">
-      {/* Top Toolbar */}
       <div className="notebook-toolbar">
         <div className="toolbar-left">
           <span className="notebook-date">
@@ -170,7 +178,6 @@ export default function NoteEditor({ note, onUpdate }: Props) {
         </div>
       </div>
 
-      {/* Format Bar */}
       <div className="format-bar">
         <div className="format-group">
           <button
@@ -279,19 +286,15 @@ export default function NoteEditor({ note, onUpdate }: Props) {
         </div>
       </div>
 
-      {/* Main Notebook Area */}
       <div className="notebook-workspace">
         <div className={`notebook-paper ${PAPER_STYLES[paperStyle].className}`}>
-          {/* Paper texture overlay */}
           <div className="paper-texture" />
           
-          {/* The actual editor */}
           <EditorContent 
             editor={editor} 
             className="editor-content-wrapper"
           />
           
-          {/* Page number */}
           <div className="page-footer">
             <span className="page-number">Page 1</span>
           </div>
