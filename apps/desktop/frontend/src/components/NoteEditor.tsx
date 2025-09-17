@@ -144,10 +144,10 @@ export default function NoteEditor({ note, onUpdate }: Props) {
 
         const rawHeight = dom.scrollHeight;
         const extraHeight = extraPages * PAGE_HEIGHT;
-        const basePages = Math.max(1, Math.ceil(Math.max(rawHeight - extraHeight, 0) / PAGE_HEIGHT));
-        const totalPages = basePages + extraPages;
+        const adjustedHeight = Math.max(rawHeight - extraHeight, PAGE_HEIGHT);
+        const computedPages = Math.max(1, Math.ceil(adjustedHeight / PAGE_HEIGHT));
 
-        setPageCount(prev => (prev === totalPages ? prev : totalPages));
+        setPageCount(prev => (prev === computedPages ? prev : computedPages));
       });
     };
 
@@ -194,7 +194,8 @@ export default function NoteEditor({ note, onUpdate }: Props) {
 
   if (!editor) return null;
 
-  const totalPages = Math.max(pageCount, 1);
+  const basePages = Math.max(pageCount, 1);
+  const totalPages = basePages + extraPages;
   const pageIndices = Array.from({ length: totalPages }, (_, index) => index);
   const pageLabel = totalPages === 1 ? "page" : "pages";
 
@@ -387,7 +388,7 @@ export default function NoteEditor({ note, onUpdate }: Props) {
           <EditorContent 
             editor={editor} 
             className="editor-content-wrapper"
-            style={{ height: "100%" }}
+            style={{ minHeight: `${totalPages * PAGE_HEIGHT}px` }}
           />
 
           <div className="page-footer-overlay-layer" aria-hidden="true">
@@ -411,3 +412,4 @@ export default function NoteEditor({ note, onUpdate }: Props) {
     </div>
   );
 }
+
