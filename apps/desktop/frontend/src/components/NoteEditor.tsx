@@ -18,6 +18,8 @@ const PAPER_STYLES = {
   cornell: { name: "Cornell", icon: "🎓", className: "paper-cornell" }
 };
 
+const PAGE_HEIGHT = 1056; // Keep in sync with app.css --paper-page-height
+
 type Props = {
   note: Note;
   onUpdate: () => void;
@@ -26,6 +28,8 @@ type Props = {
 export default function NoteEditor({ note, onUpdate }: Props) {
   const [paperStyle, setPaperStyle] = useState("lined");
   const [wordCount, setWordCount] = useState(0);
+  const [extraPages, setExtraPages] = useState(0);
+  const [pageCount, setPageCount] = useState(1);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const editor = useEditor({
@@ -127,6 +131,60 @@ export default function NoteEditor({ note, onUpdate }: Props) {
   };
 
   useEffect(() => {
+    if (!editor) return;
+
+    let frame: number | null = null;
+
+    const scheduleUpdate = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        const dom = editor.view.dom as HTMLElement | null;
+        if (!dom) return;
+
+        const rawHeight = dom.scrollHeight;
+        const extraHeight = extraPages * PAGE_HEIGHT;
+        const basePages = Math.max(1, Math.ceil(Math.max(rawHeight - extraHeight, 0) / PAGE_HEIGHT));
+        const totalPages = basePages + extraPages;
+
+        setPageCount(prev => (prev === totalPages ? prev : totalPages));
+      });
+    };
+
+    scheduleUpdate();
+
+    editor.on("update", scheduleUpdate);
+    editor.on("selectionUpdate", scheduleUpdate);
+    window.addEventListener("resize", scheduleUpdate);
+
+    return () => {
+      if (frame) {
+        window.cancelAnimationFrame(frame);
+      }
+      editor.off("update", scheduleUpdate);
+      editor.off("selectionUpdate", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+    };
+  }, [editor, extraPages]);
+
+  useEffect(() => {
+    setExtraPages(0);
+    setPageCount(1);
+  }, [note.id]);
+
+  const handleAddPage = () => {
+    setExtraPages(prev => prev + 1);
+    if (editor) {
+      setTimeout(() => editor.commands.focus("end"), 0);
+    }
+  };
+
+  const handleRemovePage = () => {
+    setExtraPages(prev => (prev > 0 ? prev - 1 : 0));
+  };
+
+
+  useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
@@ -135,6 +193,10 @@ export default function NoteEditor({ note, onUpdate }: Props) {
   }, []);
 
   if (!editor) return null;
+
+  const totalPages = Math.max(pageCount, 1);
+  const pageIndices = Array.from({ length: totalPages }, (_, index) => index);
+  const pageLabel = totalPages === 1 ? "page" : "pages";
 
   return (
     <div className="notebook-container">
@@ -172,6 +234,26 @@ export default function NoteEditor({ note, onUpdate }: Props) {
         </div>
 
         <div className="toolbar-right">
+          <div className="page-controls">
+            <button 
+              type="button"
+              className="page-control-btn"
+              onClick={handleAddPage}
+            >
+              + Page
+            </button>
+            <button 
+              type="button"
+              className="page-control-btn"
+              onClick={handleRemovePage}
+              disabled={extraPages === 0}
+            >
+              − Page
+            </button>
+            <span className="page-counter">
+              {totalPages} {pageLabel}
+            </span>
+          </div>
           <span className="word-counter">
             {wordCount} words
           </span>
@@ -287,16 +369,42 @@ export default function NoteEditor({ note, onUpdate }: Props) {
       </div>
 
       <div className="notebook-workspace">
-        <div className={`notebook-paper ${PAPER_STYLES[paperStyle].className}`}>
-          <div className="paper-texture" />
-          
+        <div 
+          className="notebook-paper-stack"
+          style={{ height: `${totalPages * PAGE_HEIGHT}px` }}
+        >
+          {pageIndices.map(index => (
+            <div
+              key={`page-${index}`}
+              className={`notebook-paper notebook-paper-surface ${PAPER_STYLES[paperStyle].className}`}
+              style={{ top: `${index * PAGE_HEIGHT}px` }}
+              aria-hidden="true"
+            >
+              <div className="paper-texture" />
+            </div>
+          ))}
+
           <EditorContent 
             editor={editor} 
             className="editor-content-wrapper"
+            style={{ height: "100%" }}
           />
-          
-          <div className="page-footer">
-            <span className="page-number">Page 1</span>
+
+          <div className="page-footer-overlay-layer" aria-hidden="true">
+            {pageIndices.map(index => (
+              <div
+                key={`footer-${index}`}
+                className="page-footer-overlay"
+                style={{
+                  top: `${index * PAGE_HEIGHT}px`,
+                  height: `${PAGE_HEIGHT}px`
+                }}
+              >
+                <div className="page-footer">
+                  <span className="page-number">Page {index + 1}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -83,12 +83,58 @@
 
 .toolbar-right {
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
   text-align: right;
 }
 
 .word-counter {
   font-size: 13px;
   color: #999;
+  font-weight: 500;
+}
+
+.page-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.page-control-btn {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #444;
+  transition: all 0.2s ease;
+}
+
+.page-control-btn:hover:enabled {
+  background: #f6f6f6;
+  border-color: #bcbcd6;
+}
+
+.page-control-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-control-btn:focus-visible {
+  outline: 2px solid #5e5ce6;
+  outline-offset: 2px;
+}
+
+.page-counter {
+  font-size: 13px;
+  color: #666;
   font-weight: 500;
 }
 
@@ -220,6 +266,55 @@
   background-image: 
     repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,.01) 10px, rgba(0,0,0,.01) 20px),
     repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(0,0,0,.01) 10px, rgba(0,0,0,.01) 20px);
+  pointer-events: none;
+}
+
+.editor-content-wrapper {
+  position: relative;
+  height: 100%;
+  z-index: 2;
+}
+
+.editor-content-wrapper .note-editor-text {
+  min-height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.notebook-paper-stack {
+  position: relative;
+  width: 100%;
+  max-width: var(--paper-page-width);
+  margin: 0 auto;
+}
+
+.notebook-paper-surface {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--paper-page-height);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.notebook-paper-surface .paper-texture {
+  pointer-events: none;
+}
+
+.page-footer-overlay-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.page-footer-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
   pointer-events: none;
 }
 
@@ -493,6 +588,8 @@
    ============================================ */
 
 :root {
+  --paper-page-width: 816px;
+  --paper-page-height: 1056px;
   /* Grid measurements */
   --paper-line-height: 32px;
   --paper-line-offset: 64px;
