@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Highlight from "@tiptap/extension-highlight";
@@ -414,6 +414,14 @@ export default function NoteEditor({ note, onUpdate }: Props) {
           />
 
           <div className="page-footer-overlay-layer" aria-hidden="true">
+            {pageIndices.slice(0, -1).map(index => (
+              <div
+                key={`separator-${index}`}
+                className="page-separator"
+                style={{ top: `${(index + 1) * PAGE_HEIGHT - 32}px`, height: '64px' }}
+              />
+            ))}
+
             {pageIndices.map(index => (
               <div
                 key={`footer-${index}`}

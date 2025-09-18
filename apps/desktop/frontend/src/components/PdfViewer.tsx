@@ -15,7 +15,6 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
   const [pageNum, setPageNum] = useState(1);
   const [numPages, setNumPages] = useState(0);
   const [scale, setScale] = useState(1.3);
-  const [selectedText, setSelectedText] = useState("");
   const [loading, setLoading] = useState(true);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -136,14 +135,13 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
       const selection = window.getSelection();
       if (selection && selection.toString().trim()) {
         const text = selection.toString().trim();
-        setSelectedText(text);
         onTextSelect(text);
-        showFloatingButton(selection);
+        showFloatingButton(selection, text);
       }
     }, 50);
   }, [onTextSelect]);
 
-  const showFloatingButton = (selection: Selection) => {
+  const showFloatingButton = (selection: Selection, text: string) => {
     try {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
@@ -182,8 +180,10 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
       document.body.appendChild(floater);
       
       // Add event listeners
+      const floaterText = text;
+
       floater.querySelector(".pdf-action-main")?.addEventListener("click", () => {
-        onInsert(selectedText);
+        onInsert(floaterText);
         window.getSelection()?.removeAllRanges();
         floater.remove();
       });
@@ -192,7 +192,7 @@ export default function PdfViewer({ url, onTextSelect, onInsert }: Props) {
         btn.addEventListener("click", () => {
           const color = btn.getAttribute("data-color")!;
           highlightSelection(selection, color);
-          onInsert(selectedText, color);
+          onInsert(floaterText, color);
           floater.remove();
         });
       });

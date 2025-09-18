@@ -310,6 +310,16 @@
   pointer-events: none;
   z-index: 3;
 }
+.page-separator {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  height: 64px;
+  border-radius: 0 0 12px 12px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.05) 40%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+
 
 .page-footer-overlay {
   position: absolute;
@@ -484,6 +494,23 @@
   font-style: italic;
   position: relative;
 }
+.paper-blank .note-editor-text .pdf-quote,
+.paper-lined .note-editor-text .pdf-quote,
+.paper-grid .note-editor-text .pdf-quote,
+.paper-dotted .note-editor-text .pdf-quote,
+.paper-cornell .note-editor-text .pdf-quote {
+  margin: 24px 0 !important;
+  line-height: 32px !important;
+}
+
+.paper-blank .note-editor-text .pdf-quote:first-child,
+.paper-lined .note-editor-text .pdf-quote:first-child,
+.paper-grid .note-editor-text .pdf-quote:first-child,
+.paper-dotted .note-editor-text .pdf-quote:first-child,
+.paper-cornell .note-editor-text .pdf-quote:first-child {
+  margin-top: 16px !important;
+}
+
 
 .pdf-quote::before {
   content: '"';
