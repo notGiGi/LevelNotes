@@ -20,6 +20,27 @@ const PAPER_STYLES = {
 
 const PAGE_HEIGHT = 1056; // Keep in sync with app.css --paper-page-height
 
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+const buildPdfParagraphs = (value: string) => {
+  const safe = escapeHtml(value.trim());
+  if (!safe) {
+    return '';
+  }
+
+  const segments = safe
+    .split(/\n{2,}/)
+    .map(segment => `<p class="pdf-quote">${segment.replace(/\n/g, '<br>')}</p>`);
+
+  return segments.join('');
+};
+
 type Props = {
   note: Note;
   onUpdate: () => void;
@@ -89,15 +110,16 @@ export default function NoteEditor({ note, onUpdate }: Props) {
         const { text, color } = e.detail;
         
         if (color) {
-          const highlightedText = `<mark data-color="${color}" style="background-color: ${color}; opacity: 0.3">${text}</mark>`;
+          const highlightedText = `<mark data-color="${color}" style="background-color: ${color}; opacity: 0.3">${escapeHtml(text)}</mark>`;
           editor.chain()
             .focus()
             .insertContent(highlightedText + ' ')
             .run();
         } else {
+          const paragraphHtml = buildPdfParagraphs(text) || `<p class="pdf-quote">${escapeHtml(text)}</p>`;
           editor.chain()
             .focus()
-            .insertContent(`<blockquote class="pdf-quote">${text}</blockquote>`)
+            .insertContent(paragraphHtml)
             .run();
         }
       }
