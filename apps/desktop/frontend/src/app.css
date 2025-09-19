@@ -310,16 +310,16 @@
   pointer-events: none;
   z-index: 3;
 }
+
 .page-separator {
   position: absolute;
-  left: 40px;
-  right: 40px;
-  height: 64px;
-  border-radius: 0 0 12px 12px;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.05) 40%, rgba(255, 255, 255, 0) 100%);
+  left: 72px;
+  right: 72px;
+  height: 24px;
   pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.05) 45%, rgba(0, 0, 0, 0) 100%);
+  opacity: 0.35;
 }
-
 
 .page-footer-overlay {
   position: absolute;
@@ -3200,6 +3200,10 @@ body {
   color: blue !important;
 }
 */
+
+
+
+
 
 
 

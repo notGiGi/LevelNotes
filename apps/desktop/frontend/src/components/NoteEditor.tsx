@@ -418,7 +418,7 @@ export default function NoteEditor({ note, onUpdate }: Props) {
               <div
                 key={`separator-${index}`}
                 className="page-separator"
-                style={{ top: `${(index + 1) * PAGE_HEIGHT - 32}px`, height: '64px' }}
+                style={{ top: `${(index + 1) * PAGE_HEIGHT - 12}px`, height: "24px" }}
               />
             ))}
 
