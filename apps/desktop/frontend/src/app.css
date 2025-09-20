@@ -7,7 +7,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #2c2c2c;
+  background: linear-gradient(180deg, #f7f8fb 0%, #eef1f8 100%);
   position: relative;
 }
 
@@ -232,11 +232,18 @@
 .notebook-workspace {
   flex: 1;
   overflow: auto;
-  background: #f0ebe5;
+  background: linear-gradient(180deg, #f7f8fb 0%, #f1f3f9 100%);
   display: flex;
   justify-content: center;
-  padding: 40px 20px;
+  align-items: flex-start;
+  padding: 56px 32px 64px;
   perspective: 1000px;
+}
+
+.notebook-editor-canvas {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 /* The Paper */
@@ -273,139 +280,112 @@
   position: relative;
   height: 100%;
   z-index: 2;
-}
-
-.editor-content-wrapper .note-editor-text {
-  min-height: var(--paper-page-height);
-  width: 100%;
-  box-sizing: border-box;
-  background: transparent;
-}
-
-.notebook-paper-stack {
-  position: relative;
-  width: 100%;
   max-width: var(--paper-page-width);
   margin: 0 auto;
 }
 
-.notebook-paper-surface {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: var(--paper-page-height);
-  pointer-events: none;
-  z-index: 1;
+.editor-content-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
-.notebook-paper-surface .paper-texture {
-  pointer-events: none;
-}
-
-.page-footer-overlay-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  pointer-events: none;
-  z-index: 3;
-}
-
-.page-separator {
-  position: absolute;
-  left: 72px;
-  right: 72px;
-  height: 24px;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.05) 45%, rgba(0, 0, 0, 0) 100%);
-  opacity: 0.35;
-}
-
-.page-footer-overlay {
-  position: absolute;
-  left: 0;
-  right: 0;
-  pointer-events: none;
+.editor-content-wrapper .note-editor-text {
+  width: 100%;
 }
 
 /* Paper Patterns */
-.paper-blank {
+.note-editor-text.paper-style-blank > .editor-page {
   background: white;
 }
 
-.paper-lined {
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent 31px,
-    #d4d4d8 31px,
-    #d4d4d8 32px
-  );
-  background-position: 0 80px;
+.note-editor-text.paper-style-lined > .editor-page {
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 31px,
+      #d4d4d8 31px,
+      #d4d4d8 32px
+    ),
+    linear-gradient(
+      to right,
+      transparent 60px,
+      rgba(252, 165, 165, 0.35) 60px,
+      rgba(252, 165, 165, 0.35) 62px,
+      transparent 62px
+    );
+  background-position: 0 var(--paper-line-offset), 0 0;
+  background-size: 100% 32px, 100% 100%;
 }
 
-.paper-lined::before {
-  content: '';
-  position: absolute;
-  left: 60px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: #fca5a5;
-  opacity: 0.3;
+.note-editor-text.paper-style-lined > .editor-page::before {
+  opacity: 0;
 }
 
-.paper-grid {
-  background-image: 
+.note-editor-text.paper-style-grid > .editor-page {
+  background-image:
     linear-gradient(to right, #e5e7eb 1px, transparent 1px),
     linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
   background-size: 24px 24px;
   background-position: 0 0;
 }
 
-.paper-dotted {
+.note-editor-text.paper-style-grid > .editor-page::before {
+  opacity: 0;
+}
+
+.note-editor-text.paper-style-dotted > .editor-page {
   background-image: radial-gradient(circle, #9ca3af 1.5px, transparent 1.5px);
   background-size: 24px 24px;
   background-position: 12px 12px;
 }
 
-.paper-cornell {
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent 31px,
-    #d4d4d8 31px,
-    #d4d4d8 32px
-  );
-  background-position: 0 80px;
+.note-editor-text.paper-style-dotted > .editor-page::before {
+  opacity: 0;
 }
 
-.paper-cornell::before {
-  content: '';
-  position: absolute;
-  left: 200px;
-  top: 80px;
-  bottom: 200px;
-  width: 2px;
-  background: #dc2626;
-  opacity: 0.3;
+.note-editor-text.paper-style-cornell > .editor-page {
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 31px,
+      #d4d4d8 31px,
+      #d4d4d8 32px
+    ),
+    linear-gradient(
+      to right,
+      transparent 200px,
+      rgba(220, 38, 38, 0.35) 200px,
+      rgba(220, 38, 38, 0.35) 202px,
+      transparent 202px
+    ),
+    linear-gradient(
+      to bottom,
+      transparent calc(100% - 200px),
+      rgba(220, 38, 38, 0.35) calc(100% - 200px),
+      rgba(220, 38, 38, 0.35) calc(100% - 198px),
+      transparent calc(100% - 198px)
+    );
+  background-position: 0 var(--paper-line-offset), 0 0, 0 0;
+  background-size: 100% 32px, 100% 100%, 100% 100%;
 }
 
-.paper-cornell::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 200px;
-  height: 2px;
-  background: #dc2626;
-  opacity: 0.3;
+.note-editor-text.paper-style-cornell > .editor-page::before {
+  opacity: 0;
 }
 
 /* Editor Content */
 .note-editor-text {
-  padding: 80px 80px 80px 80px;
-  min-height: var(--paper-page-height);
+  --page-top-padding: 80px;
+  --page-side-padding: 80px;
+  --page-bottom-padding: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--paper-page-gap);
+  counter-reset: notebook-page;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 16px;
   line-height: 32px !important;
@@ -415,7 +395,76 @@
   border: none;
   outline: none;
   box-shadow: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
+
+.note-editor-text > .editor-page {
+  position: relative;
+  width: 100%;
+  max-width: var(--paper-page-width);
+  min-height: var(--paper-page-height);
+  background: white;
+  border-radius: 6px;
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 20px 60px rgba(0, 0, 0, 0.15),
+    0 40px 120px rgba(0, 0, 0, 0.1);
+  padding: var(--page-top-padding) var(--page-side-padding) var(--page-bottom-padding);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.note-editor-text > .editor-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: 
+    repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0, 0, 0, 0.08) 10px, rgba(0, 0, 0, 0.08) 20px),
+    repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(0, 0, 0, 0.08) 10px, rgba(0, 0, 0, 0.08) 20px);
+  pointer-events: none;
+}
+
+.note-editor-text > .editor-page::after {
+  counter-increment: notebook-page;
+  content: 'Page ' counter(notebook-page);
+  position: absolute;
+  bottom: 24px;
+  right: 40px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a0aec0;
+  pointer-events: none;
+}
+
+.note-editor-text.paper-style-blank {
+  --page-top-padding: 80px;
+  --page-side-padding: 80px;
+  --page-bottom-padding: 80px;
+}
+
+.note-editor-text.paper-style-lined {
+  --page-top-padding: 88px;
+}
+
+.note-editor-text.paper-style-grid {
+  --page-top-padding: 72px;
+  --page-side-padding: 72px;
+  --page-bottom-padding: 72px;
+}
+
+.note-editor-text.paper-style-dotted {
+  --page-top-padding: 80px;
+}
+
+.note-editor-text.paper-style-cornell {
+  --page-top-padding: 80px;
+}
+
 .note-editor-text:focus,
 .note-editor-text:focus-visible {
   outline: none;
@@ -424,38 +473,30 @@
 
 
 /* Align text to lines for lined paper */
-.paper-lined .note-editor-text {
+.note-editor-text.paper-style-lined > .editor-page {
   line-height: 32px !important;
-  padding-top: 88px !important;
 }
 
-.paper-lined .note-editor-text p,
-.paper-lined .note-editor-text li,
-.paper-lined .note-editor-text h1,
-.paper-lined .note-editor-text h2,
-.paper-lined .note-editor-text h3,
-.paper-lined .note-editor-text blockquote {
+.note-editor-text.paper-style-lined > .editor-page :is(p, li, h1, h2, h3, blockquote) {
   line-height: 32px !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 
-.paper-lined .note-editor-text h1 {
+.note-editor-text.paper-style-grid > .editor-page {
+  line-height: 24px !important;
+}
+
+.note-editor-text.paper-style-lined > .editor-page h1 {
   line-height: 64px !important; /* 2x lines */
 }
 
-.paper-lined .note-editor-text h2 {
+.note-editor-text.paper-style-lined > .editor-page h2 {
   line-height: 48px !important; /* 1.5x lines */
 }
 
 /* Grid alignment */
-.paper-grid .note-editor-text {
-  line-height: 24px !important;
-  padding: 72px !important;
-}
-
-.paper-grid .note-editor-text p,
-.paper-grid .note-editor-text li {
+.note-editor-text.paper-style-grid > .editor-page :is(p, li) {
   line-height: 24px !important;
   margin-bottom: 0 !important;
 }
@@ -494,20 +535,20 @@
   font-style: italic;
   position: relative;
 }
-.paper-blank .note-editor-text .pdf-quote,
-.paper-lined .note-editor-text .pdf-quote,
-.paper-grid .note-editor-text .pdf-quote,
-.paper-dotted .note-editor-text .pdf-quote,
-.paper-cornell .note-editor-text .pdf-quote {
+.note-editor-text.paper-style-blank .pdf-quote,
+.note-editor-text.paper-style-lined .pdf-quote,
+.note-editor-text.paper-style-grid .pdf-quote,
+.note-editor-text.paper-style-dotted .pdf-quote,
+.note-editor-text.paper-style-cornell .pdf-quote {
   margin: 24px 0 !important;
   line-height: 32px !important;
 }
 
-.paper-blank .note-editor-text .pdf-quote:first-child,
-.paper-lined .note-editor-text .pdf-quote:first-child,
-.paper-grid .note-editor-text .pdf-quote:first-child,
-.paper-dotted .note-editor-text .pdf-quote:first-child,
-.paper-cornell .note-editor-text .pdf-quote:first-child {
+.note-editor-text.paper-style-blank .pdf-quote:first-child,
+.note-editor-text.paper-style-lined .pdf-quote:first-child,
+.note-editor-text.paper-style-grid .pdf-quote:first-child,
+.note-editor-text.paper-style-dotted .pdf-quote:first-child,
+.note-editor-text.paper-style-cornell .pdf-quote:first-child {
   margin-top: 16px !important;
 }
 
@@ -556,17 +597,6 @@
 }
 
 /* Page Footer */
-.page-footer {
-  position: absolute;
-  bottom: 20px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  color: #999;
-  font-size: 12px;
-  pointer-events: none;
-}
-
 /* Drawing Layer */
 .drawing-layer {
   position: absolute;
@@ -626,6 +656,7 @@
 :root {
   --paper-page-width: 816px;
   --paper-page-height: 1056px;
+  --paper-page-gap: 48px;
   /* Grid measurements */
   --paper-line-height: 32px;
   --paper-line-offset: 64px;
