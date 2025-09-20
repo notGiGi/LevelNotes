@@ -1,4 +1,4 @@
-/* ============================================
+﻿/* ============================================
    NOTEBOOK EXPERIENCE - PRODUCTION READY
    ============================================ */
 
@@ -218,7 +218,7 @@
 }
 
 .highlighter.active::after {
-  content: '✓';
+  content: 'âœ“';
   position: absolute;
   top: 50%;
   left: 50%;
@@ -405,8 +405,9 @@
   position: relative;
   width: 100%;
   max-width: var(--paper-page-width);
-  height: var(--paper-page-height) !important;
-  max-height: var(--paper-page-height) !important;
+  height: var(--paper-page-height);
+  min-height: var(--paper-page-height);
+  max-height: var(--paper-page-height);
   background: white;
   flex: 0 0 var(--paper-page-height);
   border-radius: 6px;
@@ -418,6 +419,12 @@
   box-sizing: border-box;
   overflow: hidden;
   page-break-after: always;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-editor-text > .editor-page > * {
+  flex-shrink: 0;
 }
 
 .note-editor-text > .editor-page:last-child {
@@ -2848,7 +2855,7 @@ body {
 
 
 
-/* Debug - descomenta si necesitas ver la alineación */
+/* Debug - descomenta si necesitas ver la alineaciÃ³n */
 /*
 
 
@@ -3238,3 +3245,5 @@ body {
   color: blue !important;
 }
 */
+
+

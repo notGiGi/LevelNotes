@@ -1,84 +1,55 @@
-import { Extension } from "@tiptap/core";
-import { Plugin, TextSelection } from "prosemirror-state";
+﻿import { Extension } from "@tiptap/core";
+import { Plugin } from "prosemirror-state";
+import { TextSelection } from "prosemirror-state";
 import { Fragment } from "prosemirror-model";
 import { EditorView } from "prosemirror-view";
 
 const PAGE_CLASS = "editor-page";
-const HEIGHT_TOLERANCE = 1;
-const MIN_SPLIT_OFFSET = 2;
-const DEFAULT_MARGIN = 8;
+const HEIGHT_TOLERANCE = 10;
+const MIN_SPLIT_OFFSET = 5;
+const CHECK_INTERVAL = 150;
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
+const ensureFragment = (content: Fragment, paragraphType: any) => {
+  if (content.size === 0) {
+    const p = paragraphType.createAndFill();
+    return p ? Fragment.from([p]) : Fragment.empty;
+  }
+  return content;
+};
+
 const createScheduler = (view: EditorView) => {
-  let frame = 0;
-
-  const run = () => {
-    frame = 0;
-    enforceLayout(view);
-  };
-
+  let timeoutId: NodeJS.Timeout | null = null;
+  
   const request = () => {
-    if (frame) return;
-    frame = window.requestAnimationFrame(run);
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      enforceLayout(view);
+      timeoutId = null;
+    }, CHECK_INTERVAL);
   };
-
+  
   const cancel = () => {
-    if (frame) {
-      window.cancelAnimationFrame(frame);
-      frame = 0;
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
     }
   };
-
+  
   return { request, cancel };
-};
-
-const ensureFragment = (fragment: Fragment, paragraphType: any) => {
-  if (fragment.size) return fragment;
-  if (paragraphType) return Fragment.from(paragraphType.create());
-  return fragment;
-};
-
-const posFromRect = (
-  view: EditorView,
-  rect: DOMRect,
-  pageRect: DOMRect,
-  pageBottom: number
-) => {
-  const left = clamp(rect.left + 1, pageRect.left + DEFAULT_MARGIN, pageRect.right - DEFAULT_MARGIN);
-  const top = clamp(pageBottom - 1, rect.top + 1, rect.bottom - 1);
-  return view.posAtCoords({ left, top })?.pos ?? null;
 };
 
 const findSplitPos = (
   view: EditorView,
   pageDom: HTMLElement,
   pageBottom: number,
-  childDom: HTMLElement,
+  blockDom: HTMLElement,
   blockStart: number,
   blockEnd: number
-) => {
-  if (blockEnd - blockStart < MIN_SPLIT_OFFSET * 2) {
-    return null;
-  }
-
-  const pageRect = pageDom.getBoundingClientRect();
-  const range = document.createRange();
-  range.selectNodeContents(childDom);
-  const rects = Array.from(range.getClientRects());
-  range.detach?.();
-
-  for (const rect of rects) {
-    if (rect.bottom > pageBottom + HEIGHT_TOLERANCE) {
-      const pos = posFromRect(view, rect, pageRect, pageBottom);
-      if (pos != null) {
-        return clamp(pos, blockStart + MIN_SPLIT_OFFSET, blockEnd - MIN_SPLIT_OFFSET);
-      }
-      break;
-    }
-  }
-
-  // Fall back to binary search within the block bounds.
+): number | null => {
   let low = blockStart + MIN_SPLIT_OFFSET;
   let high = blockEnd - MIN_SPLIT_OFFSET;
   let result: number | null = null;
@@ -109,7 +80,7 @@ const enforceLayout = (view: EditorView) => {
   const pageType = state.schema.nodes.page;
   const paragraphType = state.schema.nodes.paragraph;
 
-  if (!pageType) return;
+  if (!pageType || !paragraphType) return;
 
   const doc = state.doc;
   let pos = 0;
@@ -124,7 +95,11 @@ const enforceLayout = (view: EditorView) => {
     const pageDom = view.nodeDOM(pagePos) as HTMLElement | null;
     if (!pageDom || !pageDom.classList.contains(PAGE_CLASS)) continue;
 
-    const maxHeight = pageDom.clientHeight;
+    const style = window.getComputedStyle(pageDom);
+    const paddingTop = parseFloat(style.paddingTop) || 0;
+    const paddingBottom = parseFloat(style.paddingBottom) || 0;
+    const maxHeight = pageDom.clientHeight - paddingBottom;
+    
     const pageRect = pageDom.getBoundingClientRect();
     const pageBottom = pageRect.top + maxHeight;
     const children = Array.from(pageDom.children) as HTMLElement[];
@@ -132,7 +107,8 @@ const enforceLayout = (view: EditorView) => {
     let offendingIndex = -1;
     for (let i = 0; i < children.length; i += 1) {
       const child = children[i];
-      const bottom = child.offsetTop + child.offsetHeight + pageRect.top;
+      const childRect = child.getBoundingClientRect();
+      const bottom = childRect.bottom;
       if (bottom > pageBottom + HEIGHT_TOLERANCE) {
         offendingIndex = i;
         break;
@@ -143,53 +119,48 @@ const enforceLayout = (view: EditorView) => {
 
     let overflowOffset = 0;
     pageNode.forEach((child, offset, index) => {
-      if (index === offendingIndex && overflowOffset === 0) {
+      if (index === offendingIndex) {
         overflowOffset = offset;
       }
     });
 
     const pageStart = pagePos + 1;
-    const pageEnd = pagePos + pageNode.nodeSize - 1;
-
     const blockNode = pageNode.child(offendingIndex);
     const blockStart = pageStart + overflowOffset;
     const blockEnd = blockStart + blockNode.nodeSize;
 
     const splitPos = findSplitPos(view, pageDom, pageBottom, children[offendingIndex], blockStart, blockEnd);
-    if (splitPos == null || splitPos <= blockStart || splitPos >= blockEnd) {
-      continue;
+    
+    if (splitPos && splitPos > blockStart && splitPos < blockEnd) {
+      const relativeSplit = splitPos - pageStart;
+      const keepContent = ensureFragment(pageNode.content.cut(0, relativeSplit), paragraphType);
+      const overflowContent = ensureFragment(pageNode.content.cut(relativeSplit), paragraphType);
+
+      if (overflowContent.size > 0) {
+        const trimmedPage = pageType.create(pageNode.attrs, keepContent);
+        let tr = state.tr.replaceWith(pagePos, pagePos + pageNode.nodeSize, trimmedPage);
+
+        const trimmedSize = trimmedPage.nodeSize;
+        const nextPagePos = pagePos + trimmedSize;
+
+        if (pageIndex + 1 < tr.doc.childCount) {
+          const nextPageNode = tr.doc.child(pageIndex + 1);
+          const combinedContent = overflowContent.append(nextPageNode.content);
+          const newNextPage = pageType.create(nextPageNode.attrs, ensureFragment(combinedContent, paragraphType));
+          const replaceFrom = nextPagePos;
+          const replaceTo = nextPagePos + nextPageNode.nodeSize;
+          tr = tr.replaceWith(replaceFrom, replaceTo, newNextPage);
+        } else {
+          const newPageNode = pageType.create(null, overflowContent);
+          tr = tr.insert(nextPagePos, newPageNode);
+        }
+
+        const selectionPos = Math.min(nextPagePos + 1, tr.doc.content.size);
+        tr = tr.setSelection(TextSelection.near(tr.doc.resolve(selectionPos), 1));
+        view.dispatch(tr.scrollIntoView());
+        return;
+      }
     }
-
-    const relativeSplit = splitPos - pageStart;
-    const keepContent = ensureFragment(pageNode.content.cut(0, relativeSplit), paragraphType);
-    const overflowContent = ensureFragment(pageNode.content.cut(relativeSplit), paragraphType);
-
-    if (!overflowContent.size) continue;
-
-    const trimmedPage = pageType.create(pageNode.attrs, keepContent);
-    let tr = state.tr.replaceWith(pagePos, pagePos + pageNode.nodeSize, trimmedPage);
-
-    const trimmedSize = trimmedPage.nodeSize;
-    const nextPagePos = pagePos + trimmedSize;
-
-    if (pageIndex + 1 < tr.doc.childCount) {
-      const nextPageNode = tr.doc.child(pageIndex + 1);
-      const combinedContent = overflowContent.append(nextPageNode.content);
-      const newNextPage = pageType.create(nextPageNode.attrs, ensureFragment(combinedContent, paragraphType));
-      const replaceFrom = nextPagePos;
-      const replaceTo = nextPagePos + nextPageNode.nodeSize;
-      tr = tr.replaceWith(replaceFrom, replaceTo, newNextPage);
-      const selectionPos = Math.min(nextPagePos + 1, tr.doc.content.size);
-      tr = tr.setSelection(TextSelection.near(tr.doc.resolve(selectionPos), 1));
-    } else {
-      const newPageNode = pageType.create(null, overflowContent);
-      tr = tr.insert(nextPagePos, newPageNode);
-      const selectionPos = Math.min(nextPagePos + 1, tr.doc.content.size);
-      tr = tr.setSelection(TextSelection.near(tr.doc.resolve(selectionPos), 1));
-    }
-
-    view.dispatch(tr.scrollIntoView());
-    return;
   }
 };
 

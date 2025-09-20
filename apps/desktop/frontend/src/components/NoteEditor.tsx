@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
+﻿import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 
 import { useEditor, EditorContent } from "@tiptap/react";
 
@@ -19,6 +19,7 @@ import PagedDocument from "../extensions/PagedDocument";
 import Page from "../extensions/Page";
 
 import PageLayout from "../extensions/PageLayout";
+import AutoPagination from "../extensions/AutoPagination";
 
 import { TextSelection } from "prosemirror-state";
 
@@ -462,7 +463,8 @@ export default function NoteEditor({ note, onUpdate }: Props) {
 
       Page,
 
-      PageLayout,
+      AutoPagination,
+PageLayout,
 
       StarterKit.configure({
 
@@ -1065,4 +1067,5 @@ export default function NoteEditor({ note, onUpdate }: Props) {
   );
 
 }
+
 
