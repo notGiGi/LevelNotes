@@ -27,7 +27,8 @@ export const Page = Node.create<PageOptions>({
     return {
       HTMLAttributes: {
         "data-type": "page",
-        class: "editor-page"
+        class: "editor-page",
+        style: "height: var(--paper-page-height); min-height: var(--paper-page-height); max-height: var(--paper-page-height); overflow: hidden;"
       }
     };
   },

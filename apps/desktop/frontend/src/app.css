@@ -1,4 +1,4 @@
-﻿/* ============================================
+/* ============================================
    NOTEBOOK EXPERIENCE - PRODUCTION READY
    ============================================ */
 
@@ -405,9 +405,10 @@
   position: relative;
   width: 100%;
   max-width: var(--paper-page-width);
-  height: var(--paper-page-height);
-  max-height: var(--paper-page-height);
+  height: var(--paper-page-height) !important;
+  max-height: var(--paper-page-height) !important;
   background: white;
+  flex: 0 0 var(--paper-page-height);
   border-radius: 6px;
   box-shadow: 
     0 0 0 1px rgba(0, 0, 0, 0.05),
@@ -660,9 +661,9 @@
    ============================================ */
 
 :root {
-  --paper-page-width: 210mm;
-  --paper-page-height: 297mm;
-  --paper-page-gap: 12mm;
+  --paper-page-width: 816px;
+  --paper-page-height: 1056px;
+  --paper-page-gap: 48px;
   /* Grid measurements */
   --paper-line-height: 32px;
   --paper-line-offset: 64px;
@@ -3237,4 +3238,3 @@ body {
   color: blue !important;
 }
 */
-
