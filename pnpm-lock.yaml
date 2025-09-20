@@ -58,9 +58,15 @@ importers:
       pdfjs-dist:
         specifier: ^2.16.105
         version: 2.16.105
+      prosemirror-model:
+        specifier: ^1.25.3
+        version: 1.25.3
       prosemirror-state:
         specifier: ^1.4.3
         version: 1.4.3
+      prosemirror-view:
+        specifier: ^1.41.0
+        version: 1.41.0
       react:
         specifier: ^19.1.1
         version: 19.1.1

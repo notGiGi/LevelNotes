@@ -405,7 +405,8 @@
   position: relative;
   width: 100%;
   max-width: var(--paper-page-width);
-  min-height: var(--paper-page-height);
+  height: var(--paper-page-height);
+  max-height: var(--paper-page-height);
   background: white;
   border-radius: 6px;
   box-shadow: 
@@ -415,6 +416,11 @@
   padding: var(--page-top-padding) var(--page-side-padding) var(--page-bottom-padding);
   box-sizing: border-box;
   overflow: hidden;
+  page-break-after: always;
+}
+
+.note-editor-text > .editor-page:last-child {
+  page-break-after: auto;
 }
 
 .note-editor-text > .editor-page::before {
@@ -654,9 +660,9 @@
    ============================================ */
 
 :root {
-  --paper-page-width: 816px;
-  --paper-page-height: 1056px;
-  --paper-page-gap: 48px;
+  --paper-page-width: 210mm;
+  --paper-page-height: 297mm;
+  --paper-page-gap: 12mm;
   /* Grid measurements */
   --paper-line-height: 32px;
   --paper-line-offset: 64px;
@@ -3231,11 +3237,4 @@ body {
   color: blue !important;
 }
 */
-
-
-
-
-
-
-
 
